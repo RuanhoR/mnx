@@ -1,0 +1,23 @@
+{
+	"name": "long-cloud-9e80",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "pnpm wrangler deploy",
+		"dev": "pnpm wrangler dev",
+		"start": "pnpm wrangler dev",
+		"test": "vitest",
+		"cf-typegen": "pnpm wrangler types"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.12.4",
+		"@types/node": "^25.6.0",
+		"supabase": "^2.92.1",
+		"typescript": "^5.5.2",
+		"vitest": "~3.2.0",
+		"wrangler": "^4.83.0"
+	},
+	"dependencies": {
+		"@supabase/supabase-js": "^2.103.3"
+	}
+}

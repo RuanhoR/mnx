@@ -1,0 +1,16 @@
+{
+	"$schema": "./../../node_modules/wrangler/config-schema.json",
+	"name": "long-cloud-9e80",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-04-19",
+	"observability": {
+		"enabled": true,
+	},
+	"upload_source_maps": false,
+	"compatibility_flags": ["nodejs_compat"],
+	"vars": {
+		"RESEND_KEY": "YOUR RESEND API KEY",
+		"EXPO_PUBLIC_SUPABASE_URL": "YOUR SUPABASE API HOST",
+		"EXPO_PUBLIC_SUPABASE_KEY": "YOUR SUPABASE KEY",
+	},
+}

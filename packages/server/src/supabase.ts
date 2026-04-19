@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { env } from 'cloudflare:workers'
-import type { Database } from './supabase.types'
-const client = createClient<Database>(env.EXPO_PUBLIC_SUPABASE_URL, env.EXPO_PUBLIC_SUPABASE_KEY)
+const client = createClient(env.EXPO_PUBLIC_SUPABASE_URL, env.EXPO_PUBLIC_SUPABASE_KEY)
 export default class {
   static client = client;
   static get users() {
@@ -18,5 +17,8 @@ export default class {
 
   static get pmnxReadme() {
     return client.from('mnx_readme');
+  }
+  static get pmnxPublishToken() {
+    return client.from("publish-token")
   }
 }

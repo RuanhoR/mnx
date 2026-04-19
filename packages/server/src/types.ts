@@ -53,6 +53,7 @@ export interface MNXPackageData {
   create_user: number;
   scope: string;
   point: string;
+  download: number; /**下载量 */
 }
 export interface MNXReadme {
   id: number,
@@ -64,4 +65,61 @@ export interface MNXScope {
   user: number;
   name: string;
   created_at: Date
+}
+export interface MNXPublishToken {
+  id: number;
+  created_at: Date;
+  user: number;
+  name: string;
+  token: string;
+  scope: string[]
+  permission: number;
+  time: number;
+}
+
+export interface FindTokenParam {
+  id?: string;
+  content?: string;
+}
+
+export interface UpdateTokenParams extends Partial<MNXPublishToken> { }
+export interface MNXPackageInfoResult {
+  id: string;
+  readmeTable: [number, string][];
+  versions: {
+    download_url: string,
+    version_tag: string;
+    name: string;
+    create_user: User;
+    readme: number;
+    create_time: string; // ISO Date string
+  }[]
+}
+export interface BaseResult {
+  code: 200 | -1,
+  message: string;
+  success: boolean;
+}
+export interface MNXPackageVersionInfoResult {
+  id: string;
+  versions: {
+    download_url: string,
+    version_tag: string;
+    name: string;
+    create_user: User;
+    readme: string;
+    create_time: string; // ISO Date string
+  }
+}
+export interface PublishMetadata {
+  readme: string;
+  scope: string;
+  name: string;
+  version: string;
+  version_tag: string;
+}
+export interface ListPackageResult extends BaseResult {
+  data: {
+    scope: string;
+  }
 }

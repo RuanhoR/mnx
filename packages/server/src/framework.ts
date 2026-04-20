@@ -1,9 +1,12 @@
+import config from "./config";
 import { HandlerFn, HandlerGroup, HandlerRecord, supportMethod, Middleware, MiddlewareWithPaths } from "./types";
 class ResponseFrame {
   private urlParse: URL;
   private handlers: HandlerRecord = [];
   private middlewares: (Middleware | MiddlewareWithPaths)[] = [];
   private urlRoute: string[];
+  private handlerIndex: Map<string, HandlerGroup> = new Map(); // 路由索引
+  private methodIndex: Map<string, HandlerGroup[]> = new Map(); // 方法索引
 
   constructor(private request: Request) {
     this.urlParse = new URL(request.url);
@@ -14,19 +17,15 @@ class ResponseFrame {
       const method = this.request.method.toLowerCase();
       if (method == "options") {
         const requestOrigin = this.request.headers.get('Origin');
-        let allowedOrigin = 'https://';
-
+        let allowedOrigin = 'https://' + config.allowCors;
         if (requestOrigin) {
           try {
             const originUrl = new URL(requestOrigin);
-            // 检查是否为 ruanhor.dpdns.org 的子域名
-            if (originUrl.hostname === 'ruanhor.dpdns.org' ||
-              originUrl.hostname.endsWith('.ruanhor.dpdns.org') || originUrl.hostname == "wei.qzz.io" || originUrl.hostname.endsWith(".wei.qzz.io")) {
+            if (originUrl.hostname === config.allowCors ||
+              originUrl.hostname.endsWith("." + config.allowCors)) {
               allowedOrigin = requestOrigin;
             }
-          } catch (e) {
-            // 无效的 Origin，使用默认值
-          }
+          } catch { }
         }
 
         return new Response(null, {
@@ -42,57 +41,49 @@ class ResponseFrame {
       let matchedHandler: HandlerGroup | undefined = undefined;
       let paramMap = new Map<string, string>();
 
-      // 查找匹配的路由
-      for (const _handler of this.handlers) {
-        const handler = _handler as HandlerGroup;
-        // 方法匹配
-        if (handler.method !== method) continue;
+      // 使用索引优化路由查找
+      const methodHandlers = this.methodIndex.get(method);
+      if (methodHandlers) {
+        // 快速过滤相同长度路径
+        const sameLengthHandlers = methodHandlers.filter(handler => {
+          const patternSegments = handler.url.split("/").filter(segment => segment !== "");
+          return patternSegments.length === this.urlRoute.length;
+        });
 
-        // 解析路由模式
-        const patternSegments = handler.url.split("/").filter(segment => segment !== "");
+        for (const handler of sameLengthHandlers) {
+          const patternSegments = handler.url.split("/").filter(segment => segment !== "");
+          paramMap.clear();
+          let isMatch = true;
 
-        // 长度必须匹配
-        if (patternSegments.length !== this.urlRoute.length) continue;
+          for (let i = 0; i < patternSegments.length; i++) {
+            const segment = patternSegments[i];
+            if (segment.startsWith(":")) {
+              const paramName = segment.slice(1);
+              paramMap.set(paramName, decodeURIComponent(this.urlRoute[i]));
+            } else if (segment !== this.urlRoute[i]) {
+              isMatch = false;
+              break;
+            }
+          }
 
-        // 逐个匹配并提取参数
-        paramMap.clear();
-        let isMatch = true;
-
-        for (let i = 0; i < patternSegments.length; i++) {
-          const segment = patternSegments[i];
-
-          if (segment.startsWith(":")) {
-            // 参数段，保存到Map
-            const paramName = segment.slice(1);
-            paramMap.set(paramName, decodeURIComponent(this.urlRoute[i]));
-          } else if (segment !== this.urlRoute[i]) {
-            // 静态段不匹配
-            isMatch = false;
+          if (isMatch) {
+            matchedHandler = handler;
             break;
           }
         }
-
-        if (isMatch) {
-          matchedHandler = handler;
-          break;
-        }
       }
-
-      // 构建中间件执行链
       const context = {
         request: this.request,
         urlParse: this.urlParse,
         paramMap
       };
-
-      // 路径匹配辅助函数 - 前缀匹配
       const isPathMatch = (path: string): boolean => {
         const patternSegments = path.split("/").filter(segment => segment !== "");
         if (patternSegments.length > this.urlRoute.length) return false;
 
         for (let i = 0; i < patternSegments.length; i++) {
           const segment = patternSegments[i];
-          if (segment.startsWith(":")) continue; // 参数段忽略
+          if (segment.startsWith(":")) continue;
           if (segment !== this.urlRoute[i]) return false;
         }
         return true;
@@ -138,23 +129,21 @@ class ResponseFrame {
       };
       let result = await executeChain(0);
       const requestOrigin = this.request.headers.get('Origin');
-      let allowedOrigin = 'https://ruanhor.dpdns.org';
+      let allowedOrigin = `https://${config.allowCors}`;
       if (requestOrigin) {
         try {
           const originUrl = new URL(requestOrigin);
-          if (originUrl.hostname === 'ruanhor.dpdns.org' ||
-            originUrl.hostname.endsWith('.ruanhor.dpdns.org') ||
-            originUrl.hostname === 'wei.qzz.io' ||
-            originUrl.hostname.endsWith('.wei.qzz.io')) {
+          if (originUrl.hostname === config.allowCors ||
+            originUrl.hostname.endsWith("." + config.allowCors)) {
             allowedOrigin = requestOrigin;
           }
-        } catch (e) { }
+        } catch { }
       }
 
       result.headers.append('Access-Control-Allow-Origin', allowedOrigin)
       result.headers.append('Access-Control-Allow-Credentials', 'true')
       return result;
-    } catch (err: unknown) {
+    } catch (err) {
       console.error(err);
       return new Response(
         JSON.stringify({
@@ -173,21 +162,27 @@ class ResponseFrame {
   }
 
   private addHandlerFn(url: string, handler: HandlerFn, method: typeof supportMethod[number]) {
-    // 验证URL格式
     if (!url || typeof url !== "string") {
       throw new Error("[frame]: Invalid URL");
     }
-
-    // 验证handler
     if (!handler || typeof handler !== "function") {
       throw new Error("[frame]: Handler must be a function");
     }
 
-    this.handlers.push({
-      url: url.startsWith("/") ? url : "/" + url, // 确保以/开头
+    const normalizedUrl = url.startsWith("/") ? url : "/" + url;
+    const handlerGroup: HandlerGroup = {
+      url: normalizedUrl,
       handler,
       method
-    });
+    };
+
+    this.handlers.push(handlerGroup);
+    const patternKey = `${method}:${normalizedUrl}`;
+    this.handlerIndex.set(patternKey, handlerGroup);
+    if (!this.methodIndex.has(method)) {
+      this.methodIndex.set(method, []);
+    }
+    this.methodIndex.get(method)!.push(handlerGroup);
   }
 
   public use(middleware: Middleware): void;
@@ -195,13 +190,11 @@ class ResponseFrame {
   public use(paths: string[], middleware: Middleware): void;
   public use(arg1: string | string[] | Middleware, arg2?: Middleware): void {
     if (typeof arg1 === "function") {
-      // 全局中间件
       if (typeof arg1 !== "function") {
         throw new Error("[frame]: Middleware must be a function");
       }
       this.middlewares.push(arg1);
     } else {
-      // 带路径的中间件
       const paths = typeof arg1 === "string" ? [arg1] : arg1;
       const middleware = arg2!;
 

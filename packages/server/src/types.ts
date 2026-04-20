@@ -93,7 +93,8 @@ export interface MNXPackageInfoResult {
     create_user: User;
     readme: number;
     create_time: string; // ISO Date string
-  }[]
+  }[];
+  download: number; /**下载量 */
 }
 export interface BaseResult {
   code: 200 | -1,

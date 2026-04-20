@@ -11,7 +11,8 @@
   },
   "workspaces": [
     "packages/server",
-    "packages/page"
+    "packages/page",
+    "packages/docs"
   ],
   "devDependencies": {
     "@types/node": "25.0.9",

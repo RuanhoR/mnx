@@ -2,6 +2,7 @@ import { BaseResult, ListPackageResult, MNXPackageInfoResult, MNXPackageVersionI
 import { PublishToken } from "./token";
 import { KVLockManager } from "./kv-lock";
 import supabase from "../supabase";
+import { env } from "cloudflare:workers";
 
 /**
  * MNX Package Publishing Manager
@@ -13,6 +14,10 @@ export class PublishManager extends PublishToken {
    */
   static async packageInfo(scope: string, name: string): Promise<MNXPackageInfoResult> {
     try {
+      const kvCacheData = await env.BLOG_DATA.get(`mnx-packages:cache:${scope}/${name}`);
+      if (kvCacheData) {
+        return JSON.parse(kvCacheData);
+      }
       // Find package with specified scope and name
       const packageResult = await supabase.pmnxPackage
         .select("*")
@@ -24,7 +29,8 @@ export class PublishManager extends PublishToken {
         return {
           id: "",
           readmeTable: [],
-          versions: []
+          versions: [],
+          download: 0
         };
       }
 
@@ -63,17 +69,22 @@ export class PublishManager extends PublishToken {
           create_time: version.create_time.toISOString()
         };
       }));
-
-      return {
-        id: packageData.id.toString(),
+      const returnData = {
+        id: `@${scope}/${name}`,
         readmeTable,
-        versions
+        versions,
+        download: packageData.download // 添加下载量返回
       };
+      env.BLOG_DATA.put(`mnx-packages:cache:${scope}/${name}`, JSON.stringify(returnData), {
+        expirationTtl: 60 * 5
+      });
+      return returnData;
     } catch (error) {
       return {
         id: "",
         readmeTable: [],
-        versions: []
+        versions: [],
+        download: 0
       };
     }
   }
@@ -102,7 +113,8 @@ export class PublishManager extends PublishToken {
       if (uploadResult.error) {
         return { code: -1, message: `File upload failed: ${uploadResult.error.message}`, success: false };
       }
-
+      if (await env.BLOG_DATA.get(`mnx-packages:cache:${scope}/${name}`)) await env.BLOG_DATA.delete(`mnx-packages:cache:${scope}/${name}`);
+      await this.packageInfo(scope, name)
       return { code: 200, message: "Package published successfully", success: true };
     } catch (error) {
       console.error("Failed to publish package:", error);
@@ -157,6 +169,8 @@ export class PublishManager extends PublishToken {
         .from("mnx")
         .remove([filePath]);
 
+      if (await env.BLOG_DATA.get(`mnx-packages:cache:${scope}/${name}`)) await env.BLOG_DATA.delete(`mnx-packages:cache:${scope}/${name}`);
+      await this.packageInfo(scope, name)
       return { code: 200, message: "Package unpublished successfully", success: true };
     } catch (error) {
       console.error("Failed to unpublish package:", error);
@@ -228,14 +242,10 @@ export class PublishManager extends PublishToken {
     if (!user) {
       return { code: -1, message: "Invalid user", success: false };
     }
-
-    // 验证zip文件
     const validationResult = await this.validateZipFile(file);
     if (!validationResult.success) {
       return validationResult;
     }
-
-    // 使用KV锁机制防止并发发布
     return await KVLockManager.executeWithLock(metadata.scope, metadata.name, async () => {
       try {
         const readmeId = await this.handleReadmePublish(metadata.readme);
@@ -268,13 +278,10 @@ export class PublishManager extends PublishToken {
           version_tag: metadata.version_tag,
           create_time: new Date()
         };
-
         await this.updatePackageWithVersion(metadata.scope, metadata.name, newVersion);
-
         return { code: 200, message: "Package published successfully", success: true };
       } catch (error) {
         console.error("Publishing failed:", error);
-        // 如果是锁相关的错误，返回特定错误消息
         if (error instanceof Error && error.message.includes("is currently being published")) {
           return { code: -1, message: error.message, success: false };
         }
@@ -282,32 +289,21 @@ export class PublishManager extends PublishToken {
       }
     });
   }
-
-  /**
-   * 验证zip文件是否有效
-   */
   private static async validateZipFile(file: File): Promise<BaseResult> {
-    // 检查文件类型
     if (file.type !== 'application/zip' && !file.name.endsWith('.zip')) {
       return { code: -1, message: "Only zip files are supported", success: false };
     }
 
-    // 检查文件大小 (<40MB)
-    const MAX_SIZE = 40 * 1024 * 1024; // 40MB
+    const MAX_SIZE = 40 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       return { code: -1, message: "File size exceeds 40MB limit", success: false };
     }
-
     if (file.size === 0) {
       return { code: -1, message: "File is empty", success: false };
     }
-
-    // 简化的格式验证：检查文件头是否是zip格式
     try {
       const arrayBuffer = await file.slice(0, 4).arrayBuffer();
       const header = new Uint8Array(arrayBuffer);
-
-      // ZIP文件头通常是 PK\x03\x04 (50 4B 03 04)
       if (header.length >= 4 && header[0] === 0x50 && header[1] === 0x4B && header[2] === 0x03 && header[3] === 0x04) {
         return { code: 200, message: "File validation successful", success: true };
       } else {
@@ -431,6 +427,88 @@ export class PublishManager extends PublishToken {
         created_at: new Date(),
         update_at: new Date()
       });
+    }
+  }
+  /**
+   * Download package version and update download counter
+   */
+  static async downloadVersion(scope: string, name: string, version: string): Promise<{ success: boolean; data?: Blob; error?: string }> {
+    try {
+      // Verify package exists
+      const packageResult = await supabase.pmnxPackage
+        .select("*")
+        .eq("scope", scope)
+        .eq("name", name)
+        .limit(1);
+
+      if (!packageResult.data || packageResult.data.length === 0) {
+        return { success: false, error: "Package not found" };
+      }
+
+      const packageData = packageResult.data[0] as MNXPackageData;
+
+      // Verify version exists
+      const versionExists = packageData.versions.some(v => v.name === version);
+      if (!versionExists) {
+        return { success: false, error: "Version not found" };
+      }
+
+      // Get file from Supabase Storage
+      const filePath = `package/${scope}/${name}/${version}`;
+      const downloadResult = await supabase.client.storage
+        .from("mnx")
+        .download(filePath);
+
+      if (downloadResult.error || !downloadResult.data) {
+        return { success: false, error: downloadResult.error?.message || "File not found" };
+      }
+
+      // Update download counter
+      await supabase.pmnxPackage
+        .update({
+          download: packageData.download + 1,
+          update_at: new Date()
+        })
+        .eq("id", packageData.id);
+
+      // Clear cache to ensure fresh data on next request
+      if (await env.BLOG_DATA.get(`mnx-packages:cache:${scope}/${name}`)) {
+        await env.BLOG_DATA.delete(`mnx-packages:cache:${scope}/${name}`);
+      }
+
+      return { success: true, data: downloadResult.data };
+    } catch (error) {
+      console.error("Download failed:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown download error"
+      };
+    }
+  }
+
+  /**
+   * Get download statistics for a package
+   */
+  static async getDownloadStats(scope: string, name: string): Promise<{ success: boolean; downloads?: number; error?: string }> {
+    try {
+      const packageResult = await supabase.pmnxPackage
+        .select("download")
+        .eq("scope", scope)
+        .eq("name", name)
+        .limit(1);
+
+      if (!packageResult.data || packageResult.data.length === 0) {
+        return { success: false, error: "Package not found" };
+      }
+
+      const packageData = packageResult.data[0] as MNXPackageData;
+      return { success: true, downloads: packageData.download };
+    } catch (error) {
+      console.error("Failed to get download stats:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error"
+      };
     }
   }
 }

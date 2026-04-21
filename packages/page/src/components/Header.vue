@@ -1,11 +1,12 @@
 <template>
 	<div class="tool">
 		<div class="logo"></div>
-		<dv class="toolbar">
+		<div class="toolbar">
 			<div class="item" @click="go('/')">{{ getI18n('HeaderToHome') }}</div>
 			<div class="item" @click="go('/about')">{{ getI18n('HeaderToAbout') }}</div>
+			<div class="item" @click="go('/account')">{{ getI18n('HeaderToAccount') }}</div>
 			<a class="item" href="https://mbler-docs.ruanhor.dpdns.org/guide/mnx">{{ getI18n("HeaderToDocs") }}</a>
-		</dv>
+		</div>
 		<div @click="go('/search')">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"

@@ -12,6 +12,9 @@ export class LoginStatus {
   static isLog = ref(false)
   static refurshToken(newToken: string) {
     this.token = newToken;
+    // reset current status while verifying
+    this.isLog.value = false;
+    this.user = null;
     this.tasks = new Promise<void>((resolve) => {
       fetchAPI("serive/v0/self_info",
         {},
@@ -22,9 +25,22 @@ export class LoginStatus {
           this.isLog.value = true;
           KvManger.set(KvKeys.token, this.token as string)
           this.user = r.data;
+        } else {
+          // invalid token -> remove stored token
+          KvManger.rm(KvKeys.token);
+          this.token = null;
+          this.user = null;
+          this.isLog.value = false;
         }
         this.isLoading.value = false;
         resolve()
+      }).catch(() => {
+        KvManger.rm(KvKeys.token);
+        this.token = null;
+        this.user = null;
+        this.isLog.value = false;
+        this.isLoading.value = false;
+        resolve();
       })
     }).then(() => void 0).finally(() => {
       this.tasks = null;
@@ -36,7 +52,12 @@ export class LoginStatus {
   static Init() {
     const token = KvManger.get(KvKeys.token);
     if (token) this.refurshToken(token);
-    else this.isLoading.value = false;
+    else {
+      this.token = null;
+      this.user = null;
+      this.isLog.value = false;
+      this.isLoading.value = false;
+    }
   }
   static async startLogin(href: string) {
     if (this.isLoading.value) await this.waitVerify();

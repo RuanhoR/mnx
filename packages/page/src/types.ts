@@ -11,9 +11,19 @@ export const AccountLanguageKeys = [
   "AccountMail",
   "AccountToMore",
   "This",
-  "AccountCreateTime"
+  "AccountCreateTime",
+  "AccountLogout",
+  "AccountInfoLogoutToast"
 ] as const;
 export type Language = {
   [key in (typeof HeaderLanguageKey)[number] | (typeof AboutLanguageKey)[number] | (typeof AccountLanguageKeys)[number]]: string;
 };
 export const LanguageList = ['zh', 'en'] as const;
+export interface TokenListResult {
+  id: number;
+  name: string;
+  scopes: string[];
+  permissions: number;
+  createdAt: Date;
+  expiresAt: number;
+}

@@ -91,3 +91,23 @@ code {
 	font-size: 70%;
 	width: auto;
 }
+.loading {
+	animation: loading 1s linear infinite;
+	background-color: transparent;
+	border: 2px solid gray;
+	border-top-color: transparent;
+	width: 30px;
+	height: 30px;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	border-radius: 15px;
+}
+@keyframes loading {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}

@@ -21,7 +21,9 @@ const language: {
     AccountMail: "邮箱",
     AccountToMore: "更多管理，请前往：",
     This: "这里",
-    AccountCreateTime: "创建时间"
+    AccountCreateTime: "创建时间",
+    AccountLogout: "登出",
+    AccountInfoLogoutToast: "正在登出..."
   },
   en: {
     HeaderToAbout: "About",
@@ -41,7 +43,9 @@ const language: {
     AccountMail: "Mail",
     AccountToMore: "For more mange, plase to : ",
     This: "This",
-    AccountCreateTime: "Create Time"
+    AccountCreateTime: "Create Time",
+    AccountLogout: "Logout",
+    AccountInfoLogoutToast: "Logout..."
   }
 };
 let currentLanguage: typeof LanguageList[number];

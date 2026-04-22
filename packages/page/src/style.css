@@ -87,3 +87,7 @@ code {
 	font-family: SongTi;
 	src: url('/assets/dingliesongtypeface20241217-2.ttf');
 }
+.small {
+	font-size: 70%;
+	width: auto;
+}

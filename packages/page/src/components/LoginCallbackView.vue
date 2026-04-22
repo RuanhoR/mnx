@@ -17,7 +17,7 @@ onMounted(async () => {
   await LoginStatus.waitVerify();
   if (LoginStatus.isLog.value) {
     console.log(LoginStatus.isLog)
-    router.replace(KvManger.get(KvKeys.tmpVerifyURL) || "/")
+    router.push(KvManger.get(KvKeys.tmpVerifyURL) || "/")
   }
 })
 </script>

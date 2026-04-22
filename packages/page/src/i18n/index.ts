@@ -16,7 +16,12 @@ const language: {
     AccountSelectTokens: "Token",
     AccountNotLogin: "未登录",
     AccountGoLogin: "去登录",
-    VerifyError: "验证失败，可能是令牌错误"
+    VerifyError: "验证失败，可能是令牌错误",
+    AccountName: "名称",
+    AccountMail: "邮箱",
+    AccountToMore: "更多管理，请前往：",
+    This: "这里",
+    AccountCreateTime: "创建时间"
   },
   en: {
     HeaderToAbout: "About",
@@ -31,7 +36,12 @@ const language: {
     AccountSelectTokens: "Tokens",
     AccountNotLogin: "Not Login",
     AccountGoLogin: "Go to login",
-    VerifyError: "Verify failed, maybe token error"
+    VerifyError: "Verify failed, maybe token error",
+    AccountName: "Name",
+    AccountMail: "Mail",
+    AccountToMore: "For more mange, plase to : ",
+    This: "This",
+    AccountCreateTime: "Create Time"
   }
 };
 let currentLanguage: typeof LanguageList[number];
@@ -42,4 +52,7 @@ export function getI18n(key: keyof Language) {
 }
 export function seLanguage(language: typeof LanguageList[number]) {
   currentLanguage = language;
+}
+export {
+  currentLanguage
 }

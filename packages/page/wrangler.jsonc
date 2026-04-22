@@ -1,6 +1,14 @@
 {
   "$schema": "./../../node_modules/wrangler/config-schema.json",
   "name": "mnx-page",
+  "compatibility_date": "2026-4-21",
+  "routes": [
+    {
+      "zone_name": "pmnx.qzz.io",
+      "pattern": "pmnx.qzz.io/*"
+    }
+  ],
+  "workers_dev": false,
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application",

@@ -26,10 +26,12 @@ export class LoginStatus {
         this.isLoading.value = false;
         resolve()
       })
-    }).then(() => void 0, this.tasks = null);
+    }).then(() => void 0).finally(() => {
+      this.tasks = null;
+    });
   }
   static waitVerify() {
-    return this.tasks
+    return this.tasks ?? Promise.resolve();
   }
   static Init() {
     const token = KvManger.get(KvKeys.token);
@@ -38,7 +40,7 @@ export class LoginStatus {
   }
   static async startLogin(href: string) {
     if (this.isLoading.value) await this.waitVerify();
-    if (this.isLog) return true;
+    if (this.isLog.value) return true;
     KvManger.set(KvKeys.tmpVerifyURL, href)
     location.href = `https://account.ruanhor.dpdns.org/oauth2?client_id=MmFmMmFhZjQvIls3ZWJlMzAyOC1mMDU3LTQ1YWEtOTBkMC02Zjg3N2E1ZTgxODM=&redirect_uri=${encodeURIComponent('https://pmnx.qzz.io/_callback')}&response_type=code`;
   }

@@ -5,7 +5,7 @@
 			<div class="item" @click="go('/')">{{ getI18n('HeaderToHome') }}</div>
 			<div class="item" @click="go('/about')">{{ getI18n('HeaderToAbout') }}</div>
 			<div class="item" @click="go('/account')">{{ getI18n('HeaderToAccount') }}</div>
-			<a class="item" href="https://mbler-docs.ruanhor.dpdns.org/guide/mnx">{{ getI18n("HeaderToDocs") }}</a>
+			<a class="item" href="https://mbler-docs.ruanhor.dpdns.org/guide/mnx">{{ getI18n('HeaderToDocs') }}</a>
 		</div>
 		<div @click="go('/search')">
 			<svg
@@ -69,7 +69,8 @@ function go(point: string) {
 }
 .item {
 	margin: 10px;
-	color: var(--text-b)
+	color: var(--text-b);
+	cursor: pointer;
 }
 a {
 	text-decoration: none;

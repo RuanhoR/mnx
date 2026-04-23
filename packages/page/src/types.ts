@@ -13,7 +13,34 @@ export const AccountLanguageKeys = [
   "This",
   "AccountCreateTime",
   "AccountLogout",
-  "AccountInfoLogoutToast"
+  "AccountInfoLogoutToast",
+  // token management
+  "TokenListTitle",
+  "TokenGenerate",
+  "TokenName",
+  "TokenDelete",
+  "TokenDeleteConfirm",
+  "TokenCreated",
+  "TokenDeleted",
+  "TokenPlaceholderName",
+  "TokenGenerateSuccess",
+  "TokenPermission",
+  "TokenScope",
+  "TokenPublishPermission",
+  "TokenUnpublishPermission",
+  "TokenScopePlaceholder",
+  "TokenScopeAdd",
+  "TokenScopeRemove",
+  "TokenNoPermissionError",
+  "TokenGenerated",
+  "TokenSecurityNote",
+  "TokenExpiration",
+  "TokenExpirationPlaceholder",
+  "TokenExpiresAt",
+  "TokenScopeEmpty",
+  "TokenPermissionPublish",
+  "TokenPermissionUnpublish",
+  "TokenPermissionNone"
 ] as const;
 export type Language = {
   [key in (typeof HeaderLanguageKey)[number] | (typeof AboutLanguageKey)[number] | (typeof AccountLanguageKeys)[number]]: string;

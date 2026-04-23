@@ -24,6 +24,34 @@ const language: {
     AccountCreateTime: "创建时间",
     AccountLogout: "登出",
     AccountInfoLogoutToast: "正在登出..."
+    ,
+    // token management
+    TokenListTitle: "Token 列表",
+    TokenGenerate: "生成 Token",
+    TokenName: "Token 名称",
+    TokenDelete: "删除",
+    TokenDeleteConfirm: "确认删除 Token",
+    TokenCreated: "Token 已创建",
+    TokenDeleted: "Token 已删除",
+    TokenPlaceholderName: "请输入 token 名称",
+    TokenGenerateSuccess: "生成成功",
+    TokenPermission: "权限",
+    TokenScope: "作用域",
+    TokenPublishPermission: "发布权限 (publish)",
+    TokenUnpublishPermission: "取消发布权限 (unpublish)",
+    TokenScopePlaceholder: "作用域",
+    TokenScopeAdd: "添加",
+    TokenScopeRemove: "移除",
+    TokenNoPermissionError: "请至少选择一项权限",
+    TokenGenerated: "生成的令牌",
+    TokenExpiration: "过期时间",
+    TokenExpirationPlaceholder: "选择过期时间（可选）",
+    TokenExpiresAt: "过期于",
+    TokenSecurityNote: "请妥善保管此令牌，它在生成后只会显示一次。",
+    TokenScopeEmpty: "全部",
+    TokenPermissionPublish: "发布 (publish)",
+    TokenPermissionUnpublish: "取消发布 (unpublish)",
+    TokenPermissionNone: "无"
   },
   en: {
     HeaderToAbout: "About",
@@ -46,12 +74,42 @@ const language: {
     AccountCreateTime: "Create Time",
     AccountLogout: "Logout",
     AccountInfoLogoutToast: "Logout..."
+    ,
+    // token management
+    TokenListTitle: "Token List",
+    TokenGenerate: "Generate Token",
+    TokenName: "Token Name",
+    TokenDelete: "Delete",
+    TokenDeleteConfirm: "Confirm delete token",
+    TokenCreated: "Token created",
+    TokenDeleted: "Token deleted",
+    TokenPlaceholderName: "Enter token name",
+    TokenGenerateSuccess: "Generate success",
+    TokenPermission: "Permission",
+    TokenScope: "Scope",
+    TokenPublishPermission: "Publish permission (publish)",
+    TokenUnpublishPermission: "Unpublish permission (unpublish)",
+    TokenScopePlaceholder: "Scope",
+    TokenScopeAdd: "Add",
+    TokenScopeRemove: "Remove",
+    TokenNoPermissionError: "Please select at least one permission",
+    TokenGenerated: "Generated Token",
+    TokenExpiration: "Expiration",
+    TokenExpirationPlaceholder: "Select expiration time (optional)",
+    TokenExpiresAt: "Expires At",
+    TokenSecurityNote: "Please keep this token safe, it will only be displayed once after generation.",
+    TokenScopeEmpty: "All",
+    TokenPermissionPublish: "Publish (publish)",
+    TokenPermissionUnpublish: "Unpublish (unpublish)",
+    TokenPermissionNone: "None"
   }
 };
-let currentLanguage: typeof LanguageList[number];
+let currentLanguage: typeof LanguageList[number] = 'zh';
 const broLanguage = navigator.language.split("-")[0] as string;
 if (LanguageList.includes(broLanguage as typeof LanguageList[number])) currentLanguage = broLanguage as typeof LanguageList[number];
-export function getI18n(key: keyof Language) {
+
+export type I18nKey = keyof Language;
+export function getI18n(key: I18nKey) {
   return language[currentLanguage][key]
 }
 export function seLanguage(language: typeof LanguageList[number]) {

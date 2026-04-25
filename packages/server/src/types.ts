@@ -119,8 +119,14 @@ export interface PublishMetadata {
   version: string;
   version_tag: string;
 }
-export interface ListPackageResult extends BaseResult {
+export interface UserScopeResult extends BaseResult {
   data: {
     scope: string;
   }
+}
+export interface ListPackageResult extends BaseResult {
+  data: {
+    downloaded: number;
+    id: string;
+  }[];
 }

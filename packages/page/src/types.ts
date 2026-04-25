@@ -40,7 +40,8 @@ export const AccountLanguageKeys = [
   "TokenScopeEmpty",
   "TokenPermissionPublish",
   "TokenPermissionUnpublish",
-  "TokenPermissionNone"
+  "TokenPermissionNone",
+  "Copied"
 ] as const;
 export type Language = {
   [key in (typeof HeaderLanguageKey)[number] | (typeof AboutLanguageKey)[number] | (typeof AccountLanguageKeys)[number]]: string;
@@ -53,4 +54,8 @@ export interface TokenListResult {
   permissions: number;
   createdAt: Date;
   expiresAt: number;
+}
+export interface PackageProfile {
+  id: string;
+  downloaded: number;
 }

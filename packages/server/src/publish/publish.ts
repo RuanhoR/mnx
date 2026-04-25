@@ -1,4 +1,4 @@
-import { BaseResult, ListPackageResult, MNXPackageInfoResult, MNXPackageVersionInfoResult, PublishMetadata, MNXReadme, MNXPackageData, Version, User, MNXScope } from "../types";
+import { BaseResult, ListPackageResult, MNXPackageInfoResult, MNXPackageVersionInfoResult, PublishMetadata, MNXReadme, MNXPackageData, Version, User, MNXScope, UserScopeResult } from "../types";
 import { PublishToken } from "./token";
 import { KVLockManager } from "./kv-lock";
 import supabase from "../supabase";
@@ -314,11 +314,38 @@ export class PublishManager extends PublishToken {
       return { code: -1, message: "Failed to validate file", success: false };
     }
   }
+  static async listPackages(user: User): Promise<ListPackageResult> {
+    try {
+      if (!user) {
+        return { code: -1, message: "Invalid user", success: false, data: [] };
+      }
+      const scopeResult = await supabase.pmnxScope
+        .select("name")
+        .eq("user", user.uid);
 
-  /**
-   * List user's packages
-   */
-  static async listPackage(user: User): Promise<ListPackageResult> {
+      if (!scopeResult.data || scopeResult.data.length === 0) {
+        return { code: 200, message: "No packages found", success: true, data: [] };
+      }
+
+      const userScopes = scopeResult.data.map(scope => scope.name);
+      const packagesResult = await supabase.pmnxPackage
+        .select("id, download")
+        .in("scope", userScopes);
+      if (!packagesResult.data || packagesResult.data.length === 0) {
+        return { code: 200, message: "No packages found", success: true, data: [] };
+      }
+      const packagesData = packagesResult.data.map(pkg => ({
+        downloaded: pkg.download,
+        id: pkg.id.toString()
+      }));
+
+      return { code: 200, message: "Packages retrieved successfully", success: true, data: packagesData };
+    } catch (error) {
+      console.error("Failed to list packages:", error);
+      return { code: -1, message: "Failed to list packages", success: false, data: [] };
+    }
+  }
+  static async getUserScope(user: User): Promise<UserScopeResult> {
     if (!user) {
       return { code: -1, message: "Invalid token", success: false, data: { scope: "" } };
     }

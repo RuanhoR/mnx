@@ -1,0 +1,231 @@
+.account-select-item {
+	position: relative;
+	width: 90%;
+	height: 60px;
+	border-radius: 10px;
+	border: solid var(--gray-light);
+	margin-bottom: 20px;
+	display: flex;
+	justify-content: center;
+	font-size: 130%;
+	padding: 5px;
+	padding-top: 14px;
+	cursor: pointer;
+}
+.account-select-content {
+	align-self: start;
+	max-width: 30%;
+	position: relative;
+}
+.account-vue-root {
+	position: relative;
+	width: 100%;
+	display: flex;
+	justify-content: left;
+}
+.profile-root-card {
+	border: solid var(--gray-light);
+	width: 280px;
+	border-radius: 10px;
+	padding: 20px;
+}
+
+.token-list {
+	max-height: 300px;
+	overflow: auto;
+}
+.token-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 6px 0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+.token-item-left {
+	display: flex;
+	flex-direction: column;
+}
+.token-meta {
+	font-size: 12px;
+	color: gray;
+}
+.token-item-right button {
+	background: transparent;
+	border: 1px solid var(--gray-light);
+	padding: 4px 8px;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.token-form {
+	display: grid;
+	gap: 16px;
+	margin-top: 12px;
+}
+
+.form-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.form-group label {
+	font-weight: 500;
+	color: var(--text-h);
+	font-size: 14px;
+}
+
+.token-input {
+	padding: 8px 12px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	font-size: 14px;
+	transition: border-color 0.2s;
+}
+
+.token-input:focus {
+	outline: none;
+	border-color: var(--accent);
+}
+
+.permissions-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	font-size: 14px;
+	color: var(--text);
+}
+
+.checkbox-label input[type='checkbox'] {
+	display: none;
+}
+
+.checkbox-svg {
+	flex-shrink: 0;
+	color: var(--text);
+	transition: color 0.2s;
+}
+
+.checkbox-label:hover .checkbox-svg {
+	color: var(--accent);
+}
+
+.scopes-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.scope-input-row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.scope-input {
+	flex: 1;
+	padding: 8px 12px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	font-size: 14px;
+	transition: border-color 0.2s;
+}
+
+.scope-input:focus {
+	outline: none;
+	border-color: var(--accent);
+}
+
+.scope-remove {
+	width: 24px;
+	height: 24px;
+	border: 1px solid #ff4444;
+	background: transparent;
+	color: #ff4444;
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s;
+}
+
+.scope-remove:hover {
+	background: #ff4444;
+	color: white;
+}
+
+.scope-add {
+	align-self: flex-start;
+	padding: 6px 12px;
+	border: 1px solid var(--border);
+	background: var(--accent-bg);
+	color: var(--accent);
+	border-radius: 6px;
+	cursor: pointer;
+	transition: all 0.2s;
+	font-size: 14px;
+}
+
+.scope-add:hover {
+	background: var(--accent);
+	color: white;
+}
+
+.generate-button {
+	padding: 10px 16px;
+	background: var(--accent);
+	color: white;
+	border: none;
+	border-radius: 6px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.generate-button:hover:not(:disabled) {
+	background: #8a2be2;
+}
+
+.generate-button:disabled {
+	background: #ccc;
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.generated-token {
+	margin-top: 12px;
+	border-color: var(--accent) !important;
+}
+
+.token-display {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.token-name {
+	font-weight: 600;
+	color: var(--text-h);
+}
+
+.token-value {
+	font-family: monospace;
+	background: #f5f5f5;
+	padding: 8px 12px;
+	border-radius: 4px;
+	font-size: 12px;
+	word-break: break-all;
+}
+
+.token-note {
+	color: var(--gray-light);
+	font-style: italic;
+}

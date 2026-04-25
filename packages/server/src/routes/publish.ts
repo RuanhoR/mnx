@@ -173,7 +173,7 @@ const ListPackage: HandlerFn = async (data, request, _) => {
   }
 
   const user = JSON.parse(_user) as User;
-  const result = await PublishManager.listPackage(user);
+  const result = await PublishManager.listPackages(user);
   return json({
     code: result.code,
     data: result.data

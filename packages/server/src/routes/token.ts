@@ -179,9 +179,41 @@ async function listTokens(data: Map<string, string>, request: Request, url: URL)
     }, 500);
   }
 }
-
+async function tokenVerify(data: Map<string, string>, request: Request, url: URL): Promise<Response> {
+  try {
+    const token = data.get("token");
+    if (!token) {
+      return json({
+        code: -1,
+        message: "Token parameter is required"
+      }, 400);
+    }
+    const user = await PublishToken.verifyTokenASProfile(token);
+    if (user) {
+      delete (user as any).friends_request;
+      delete (user as any).friends;
+      delete (user as any).password;
+      return json({
+        code: 200,
+        message: "Token verified successfully",
+        data: user
+      });
+    } else {
+      return json({
+        code: -1,
+        message: "Invalid token"
+      }, 401);
+    }
+  } catch (error) {
+    return json({
+      code: -1,
+      message: "Internal server error"
+    }, 500);
+  }
+}
 export function RegisterTokenRouter(frame: ResponseFrame) {
   frame.post("/account/publish/token/gen", genToken);
   frame.delete("/account/publish/token/delete/:name", deleteToken)
   frame.get("/account/publish/token/list", listTokens);
+  frame.get("/token/:token/verify", tokenVerify)
 }

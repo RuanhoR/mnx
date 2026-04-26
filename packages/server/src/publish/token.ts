@@ -9,14 +9,14 @@ export enum TokenPermission {
 
 export class PublishToken {
   static async verifyToken(token: string, mode: TokenPermission, scope: string): Promise<User | null> {
-    const result = await supabase.pmnxPublishToken.select("token,permission,scope,user,id,time").eq("token", token).limit(1);
+    const result = await supabase.pmnxPublishToken.select("token,permission,scope,user,id,time,created_at").eq("token", token).limit(1);
     if (!result.data || result.data.length <= 0) {
       return null;
     }
     const tokenData = result.data[0] as MNXPublishToken;
 
     // Check if token has expired
-    if (tokenData.time && tokenData.time < Date.now()) {
+    if (tokenData.time && (new Date(tokenData.created_at).getTime() + tokenData.time) < Date.now()) {
       // Delete expired token
       await supabase.pmnxPublishToken.delete().eq("id", tokenData.id);
       return null;
@@ -41,7 +41,7 @@ export class PublishToken {
     return userResult.data[0] as User;
   }
 
-  static async createToken(name: string, user: number, permissions: TokenPermission[], scopes: string[], expirationTime?: number): Promise<MNXPublishToken | null> {
+  static async createToken(name: string, user: number, permissions: TokenPermission[], scopes: string[], expirationTime?: number): Promise<any | MNXPublishToken | null> {
     const token = uuidv4();
     const permissionBitmask = permissions.reduce((acc, perm) => acc | perm, 0);
 
@@ -72,13 +72,13 @@ export class PublishToken {
     return result.error === null;
   }
   static async verifyTokenASProfile(token: string): Promise<User | null> {
-    const result = await supabase.pmnxPublishToken.select("token,permission,scope,user,id,time").eq("token", token).limit(1);
+    const result = await supabase.pmnxPublishToken.select("token,permission,scope,user,id,time,created_at").eq("token", token).limit(1);
     if (!result.data || result.data.length <= 0) {
       return null;
     }
     const tokenData = result.data[0] as MNXPublishToken;
     // Check if token has expired
-    if (tokenData.time && tokenData.time < Date.now()) {
+    if (tokenData.time && (new Date(tokenData.created_at).getTime() + tokenData.time) < Date.now()) {
       // Delete expired token
       await supabase.pmnxPublishToken.delete().eq("id", tokenData.id);
       return null;

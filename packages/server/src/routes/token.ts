@@ -62,7 +62,7 @@ async function genToken(data: Map<string, string>, request: Request, url: URL): 
     if (!createdToken) {
       return json({
         code: -1,
-        message: "Failed to create token"
+        message: "Failed to create token",
       }, 500);
     }
 

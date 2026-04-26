@@ -16,6 +16,12 @@ const uploadMetadata: HandlerFn = async (data, request, _) => {
 
   const user = JSON.parse(_user) as User;
   const scope = data.get("scope") as string;
+  if (!scope.startsWith("@")) {
+    return json({
+      code: -1,
+      data: "scope must start with @"
+    }, 400);
+  }
   const name = data.get("name") as string;
   const isLocked = await KVLockManager.hasLock(scope, name);
   if (isLocked) {
@@ -37,11 +43,17 @@ const uploadMetadata: HandlerFn = async (data, request, _) => {
       code: -1,
       data: "Bad format"
     }, 400)
+    if (!metadata.scope.startsWith("@")) return json({
+      code: -1,
+      data: "scope must start with @"
+    }, 400)
     if (metadata.name.length < 1 || !/[a-zA-Z0-9_]/.test(metadata.name)) return json({
       code: -1,
       data: "Bad name"
     }, 400)
-    const sessionKey = `publish-session:${user.uid}:${scope}:${name}`;
+    metadata.scope = metadata.scope.slice(1);
+    const sessionId = crypto.randomUUID();
+    const sessionKey = `publish-session:${sessionId}`;
     await env.BLOG_DATA.put(sessionKey, JSON.stringify({
       metadata,
       createdAt: Date.now(),
@@ -50,7 +62,7 @@ const uploadMetadata: HandlerFn = async (data, request, _) => {
 
     return json({
       code: 200,
-      data: { sessionKey }
+      data: { sessionId }
     });
   } catch (error) {
     return json({
@@ -70,11 +82,17 @@ const uploadZip: HandlerFn = async (data, request, _) => {
   }
 
   const user = JSON.parse(_user) as User;
-  const scope = data.get("scope") as string;
-  const name = data.get("name") as string;
+  const session = data.get("session") as string;
+
+  if (!session) {
+    return json({
+      code: -1,
+      data: "No publish session provided"
+    }, 400);
+  }
 
   try {
-    const sessionKey = `publish-session:${user.uid}:${scope}:${name}`;
+    const sessionKey = `publish-session:${session}`;
     const sessionData = await env.BLOG_DATA.get(sessionKey);
     if (!sessionData) {
       return json({
@@ -146,11 +164,18 @@ const unpublishPackage: HandlerFn = async (data, request, _) => {
     data: "verify failed"
   }, 400)
   const scope = data.get("scope") as string;
+  if (!scope.startsWith("@")) {
+    return json({
+      code: -1,
+      data: "scope must start with @"
+    }, 400);
+  }
+  const normalizedScope = scope.slice(1);
   const name = data.get("name") as string;
   const version = data.get("version") as string;
 
   try {
-    const result = await PublishManager.unpublishPackage(scope, name, version);
+    const result = await PublishManager.unpublishPackage(normalizedScope, name, version);
     return json({
       code: result.code,
       data: result.message
@@ -321,9 +346,9 @@ const PackageInfo: HandlerFn = async (data, _, __) => {
 }
 export function RegerPUblishRouter(frame: ResponseFrame) {
   frame.post("/publish/session/:scope/:name/create", uploadMetadata);
-  frame.post("/publish/session/:scope/:name/upload", uploadZip);
+  frame.post("/publish/session/:session/upload", uploadZip);
   frame.post("/unpublish/:scope/:name/:version", unpublishPackage);
-  frame.post("/account/publish/list", ListPackage);
+  frame.get("/account/publish/list", ListPackage);
   frame.get("/package/:scope/:name/v/:version/info", PackageInfo);
   frame.get("/package/:scope/:name/info", packageInfoAllVersion)
   frame.get("/package/:scope/:name/v/:version/download", downloadPackage);

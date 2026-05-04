@@ -1,4 +1,4 @@
-import { BaseResult, ListPackageResult, MNXPackageInfoResult, MNXPackageVersionInfoResult, PublishMetadata, MNXReadme, MNXPackageData, Version, User, MNXScope, UserScopeResult } from "../types";
+import { BaseResult, ListPackageResult, MNXPackageInfoResult, MNXPackageVersionInfoResult, PublishMetadata, MNXReadme, MNXPackageData, Version, User, MNXScope, UserScopeResult, SearchResult } from "../types";
 import { PublishToken } from "./token";
 import { KVLockManager } from "./kv-lock";
 import supabase from "../supabase";
@@ -9,32 +9,66 @@ import { env } from "cloudflare:workers";
  * Handles package publishing, unpublishing, package information queries, etc.
  */
 export class PublishManager extends PublishToken {
+  private static normalizeScope(scope: string): string {
+    return scope.trim().replace(/^@+/, "").toLowerCase();
+  }
+  private static normalizeName(name: string): string {
+    return name.trim().toLowerCase();
+  }
+  private static isMatchPackage(pkg: { scope?: string; name?: string }, scope: string, name: string): boolean {
+    return this.normalizeScope(pkg.scope || "") === this.normalizeScope(scope)
+      && this.normalizeName(pkg.name || "") === this.normalizeName(name);
+  }
+  private static async findPackage(scope: string, name: string): Promise<MNXPackageData | null> {
+    const normalizedScope = this.normalizeScope(scope);
+    const normalizedName = this.normalizeName(name);
+
+    const exact = await supabase.pmnxPackage
+      .select("*")
+      .eq("scope", normalizedScope)
+      .eq("name", normalizedName)
+      .limit(1);
+    if (exact.data && exact.data.length > 0) {
+      return exact.data[0] as MNXPackageData;
+    }
+
+    if (exact.error) {
+      console.warn("findPackage exact query error:", exact.error);
+    }
+
+    const fuzzy = await supabase.pmnxPackage
+      .select("*")
+      .ilike("name", name.trim())
+      .limit(50);
+    if (fuzzy.error) {
+      console.warn("findPackage fuzzy query error:", fuzzy.error);
+      return null;
+    }
+    const match = (fuzzy.data || []).find((item) =>
+      this.isMatchPackage(item as any, normalizedScope, normalizedName)
+    );
+    return (match as MNXPackageData) || null;
+  }
   /**
    * Get package information
    */
   static async packageInfo(scope: string, name: string): Promise<MNXPackageInfoResult> {
     try {
-      const kvCacheData = await env.BLOG_DATA.get(`mnx-packages:cache:${scope}/${name}`);
+      const normalizedScope = this.normalizeScope(scope);
+      const normalizedName = name.trim();
+      const kvCacheData = await env.BLOG_DATA.get(`mnx-packages:cache:${normalizedScope}/${normalizedName}`);
       if (kvCacheData) {
         return JSON.parse(kvCacheData);
       }
-      // Find package with specified scope and name
-      const packageResult = await supabase.pmnxPackage
-        .select("*")
-        .eq("scope", scope)
-        .eq("name", name)
-        .limit(1);
-
-      if (!packageResult.data || packageResult.data.length === 0) {
+      const packageData = await this.findPackage(scope, name);
+      if (!packageData) {
         return {
           id: "",
           readmeTable: [],
           versions: [],
-          download: 0
+          download: -1
         };
       }
-
-      const packageData = packageResult.data[0] as MNXPackageData;
       const readmeTable: [number, string][] = [];
 
       // Get README information for all versions
@@ -61,25 +95,26 @@ export class PublishManager extends PublishToken {
           : { uid: 0, name: "Unknown", mail: "", ctime: "", friends: [], friends_request: [], password: "" };
 
         return {
-          download_url: `/package/${scope}/${name}/v/${version.name}/download`,
+          download_url: `/package/${normalizedScope}/${normalizedName}/v/${version.name}/download`,
           version_tag: version.version_tag,
           name: version.name,
           create_user: user,
           readme: version.readme,
-          create_time: version.create_time.toISOString()
+          create_time: (new Date(version.create_time)).toISOString()
         };
       }));
       const returnData = {
-        id: `@${scope}/${name}`,
+        id: `@${normalizedScope}/${normalizedName}`,
         readmeTable,
         versions,
         download: packageData.download // 添加下载量返回
       };
-      env.BLOG_DATA.put(`mnx-packages:cache:${scope}/${name}`, JSON.stringify(returnData), {
+      env.BLOG_DATA.put(`mnx-packages:cache:${normalizedScope}/${normalizedName}`, JSON.stringify(returnData), {
         expirationTtl: 60 * 5
       });
       return returnData;
     } catch (error) {
+      console.error("Package info: error: ", { error })
       return {
         id: "",
         readmeTable: [],
@@ -88,7 +123,69 @@ export class PublishManager extends PublishToken {
       };
     }
   }
+  static async searchPackage(keyword: string): Promise<SearchResult> {
+    try {
+      const normalizedKeyword = keyword.trim().toLowerCase();
 
+      // Search in package names and scopes
+      const packagesResult = await supabase.pmnxPackage
+        .select("*")
+        .or(`name.ilike.%${normalizedKeyword}%,scope.ilike.%${normalizedKeyword}%`)
+        .limit(50);
+
+      if (packagesResult.error) {
+        console.warn("searchPackage query error:", packagesResult.error);
+        return {
+          mod: new Date(),
+          data: []
+        };
+      }
+
+      if (!packagesResult.data || packagesResult.data.length === 0) {
+        return {
+          mod: new Date(),
+          data: []
+        };
+      }
+
+      // Transform the result to match SearchResult format
+      const searchData = packagesResult.data.map((pkg: any) => ({
+        name: pkg.name,
+        description: this.buildPackageDescription(pkg),
+        version: this.getLatestVersion(pkg.versions),
+        scope: pkg.scope,
+        download: pkg.download
+      }));
+
+      return {
+        mod: new Date(),
+        data: searchData
+      };
+    } catch (error) {
+      console.error("searchPackage error:", error);
+      return {
+        mod: new Date(),
+        data: []
+      };
+    }
+  }
+
+  private static buildPackageDescription(pkg: any): string {
+    return `Package ${pkg.name} in scope ${pkg.scope} with ${pkg.versions?.length || 0} versions`;
+  }
+
+  private static getLatestVersion(versions: any[]): string {
+    if (!versions || versions.length === 0) {
+      return "0.0.0";
+    }
+
+    // Sort versions by create_time to get the latest
+    const sortedVersions = [...versions].sort((a, b) =>
+      new Date(b.create_time).getTime() - new Date(a.create_time).getTime()
+    );
+
+    return sortedVersions[0]?.name || "0.0.0";
+  }
   /**
    * Publish package
    */
@@ -109,7 +206,7 @@ export class PublishManager extends PublishToken {
       const uploadResult = await supabase.client.storage
         .from("mnx")
         .upload(filePath, file);
-
+      console.warn("publishPackage upload result", { filePath, uploadResult });
       if (uploadResult.error) {
         return { code: -1, message: `File upload failed: ${uploadResult.error.message}`, success: false };
       }
@@ -183,17 +280,12 @@ export class PublishManager extends PublishToken {
    */
   static async packageInfoForAVersion(scope: string, name: string, versionName: string /**version name not tag */): Promise<MNXPackageVersionInfoResult> {
     try {
-      const packageResult = await supabase.pmnxPackage
-        .select("*")
-        .eq("scope", scope)
-        .eq("name", name)
-        .limit(1);
-
-      if (!packageResult.data || packageResult.data.length === 0) {
+      const normalizedScope = this.normalizeScope(scope);
+      const normalizedName = name.trim();
+      const packageData = await this.findPackage(scope, name);
+      if (!packageData) {
         return { id: "", versions: {} as any };
       }
-
-      const packageData = packageResult.data[0] as MNXPackageData;
       const version = packageData.versions.find(v => v.name === versionName);
 
       if (!version) {
@@ -221,7 +313,7 @@ export class PublishManager extends PublishToken {
       return {
         id: packageData.id.toString(),
         versions: {
-          download_url: `/package/${scope}/${name}/v/${version.name}/download`,
+          download_url: `/package/${normalizedScope}/${normalizedName}/v/${version.name}/download`,
           version_tag: version.version_tag,
           name: version.name,
           create_user: user,
@@ -461,18 +553,12 @@ export class PublishManager extends PublishToken {
    */
   static async downloadVersion(scope: string, name: string, version: string): Promise<{ success: boolean; data?: Blob; error?: string }> {
     try {
-      // Verify package exists
-      const packageResult = await supabase.pmnxPackage
-        .select("*")
-        .eq("scope", scope)
-        .eq("name", name)
-        .limit(1);
-
-      if (!packageResult.data || packageResult.data.length === 0) {
+      const normalizedScope = this.normalizeScope(scope);
+      const normalizedName = name.trim();
+      const packageData = await this.findPackage(scope, name);
+      if (!packageData) {
         return { success: false, error: "Package not found" };
       }
-
-      const packageData = packageResult.data[0] as MNXPackageData;
 
       // Verify version exists
       const versionExists = packageData.versions.some(v => v.name === version);
@@ -481,7 +567,7 @@ export class PublishManager extends PublishToken {
       }
 
       // Get file from Supabase Storage
-      const filePath = `package/${scope}/${name}/${version}`;
+      const filePath = `package/${normalizedScope}/${normalizedName}/${version}`;
       const downloadResult = await supabase.client.storage
         .from("mnx")
         .download(filePath);
@@ -499,8 +585,8 @@ export class PublishManager extends PublishToken {
         .eq("id", packageData.id);
 
       // Clear cache to ensure fresh data on next request
-      if (await env.BLOG_DATA.get(`mnx-packages:cache:${scope}/${name}`)) {
-        await env.BLOG_DATA.delete(`mnx-packages:cache:${scope}/${name}`);
+      if (await env.BLOG_DATA.get(`mnx-packages:cache:${normalizedScope}/${normalizedName}`)) {
+        await env.BLOG_DATA.delete(`mnx-packages:cache:${normalizedScope}/${normalizedName}`);
       }
 
       return { success: true, data: downloadResult.data };

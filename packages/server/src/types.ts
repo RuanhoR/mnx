@@ -15,7 +15,16 @@ export type MiddlewareContext = {
 }
 
 export type Middleware = (context: MiddlewareContext, next: () => Promise<Response>) => Response | Promise<Response>;
-
+export interface SearchResult {
+  mod: Date;
+  data: {
+    name: string;
+    description: string;
+    version: string;
+    scope: string;
+    download: number;
+  }[]
+}
 export type MiddlewareWithPaths = {
   paths: string[];
   middleware: Middleware;

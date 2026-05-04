@@ -1,4 +1,4 @@
-export async function fetchAPI(path: string, data: object, method: string = "POST", apiBase: string, token?: string,) {
+export async function fetchAPI<T = any>(path: string, data: object, method: string = "POST", apiBase: string, token?: string,): Promise<{ status: number, code?: number, data?: T, ok: boolean }> {
   const fetchConfig = {
     method: method,
     credentials: "include",
@@ -27,11 +27,11 @@ export async function fetchAPI(path: string, data: object, method: string = "POS
   }
 
   const f = await fetch(`${apiBase}${path.startsWith("/") ? path : '/' + path}`, fetchConfig);
-  const jsonResponse = await f.json();
+  const jsonResponse = await f.json().catch(() => ({}));
   return {
     status: f.status,
     code: jsonResponse.code,
-    data: jsonResponse.data,
+    data: jsonResponse.data as T,
     ok: f.ok
   };
 }

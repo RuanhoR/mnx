@@ -5,6 +5,20 @@ import { PublishManager } from "../publish/publish";
 import { KVLockManager } from "../publish/kv-lock";
 import { HandlerFn, User, PublishMetadata } from "../types";
 
+function decodeSafe(v: string): string {
+  try {
+    return decodeURIComponent(v);
+  } catch {
+    return v;
+  }
+}
+
+function normalizeScope(v: string): string {
+  const trimmed = v.trim();
+  const withoutAt = trimmed.replace(/^@+/, "");
+  return withoutAt.toLowerCase();
+}
+
 const uploadMetadata: HandlerFn = async (data, request, _) => {
   const _user = data.get("__user");
   if (!_user) {
@@ -62,7 +76,7 @@ const uploadMetadata: HandlerFn = async (data, request, _) => {
 
     return json({
       code: 200,
-      data: { sessionId }
+      data: { sessionId, sessionKey: sessionId }
     });
   } catch (error) {
     return json({
@@ -141,7 +155,7 @@ const uploadZip: HandlerFn = async (data, request, _) => {
       data: result.message
     }, result.success ? 200 : 400);
   } catch (error) {
-    console.error("Failed to upload package:", error);
+    console.error("Failed to upload package:", { error });
     return json({
       code: -1,
       data: error instanceof Error ? error.message : "Upload failed"
@@ -160,7 +174,7 @@ const unpublishPackage: HandlerFn = async (data, request, _) => {
 
   const user = JSON.parse(_user) as User;
   if (!user.uid) return json({
-    cde: -1,
+    code: -1,
     data: "verify failed"
   }, 400)
   const scope = data.get("scope") as string;
@@ -206,22 +220,23 @@ const ListPackage: HandlerFn = async (data, request, _) => {
 };
 
 const downloadPackage: HandlerFn = async (data, request, _) => {
-  const scope = data.get("scope") as string;
-  const name = data.get("name") as string;
-  const version = data.get("version") as string;
+  const scopeRaw = data.get("scope") as string;
+  const scope = decodeSafe(scopeRaw);
+  const name = decodeSafe((data.get("name") as string) || "").trim();
+  const version = decodeSafe((data.get("version") as string) || "").trim();
   if (!scope || !name || !version) {
     return json({
       code: -1,
       data: "No param: scope or name or version"
     }, 400);
   }
-  if (!scope.startsWith("@")) {
+  const normalizedScope = normalizeScope(scope);
+  if (!/^[a-zA-Z0-9\-\._]+$/.test(normalizedScope)) {
     return json({
       code: -1,
-      data: "scope is not /@.*/"
+      data: "scope format error"
     }, 400);
   }
-  const normalizedScope = scope.slice(1);
   if (!/^[a-zA-Z0-9\-\._]+$/.test(name)) {
     return json({
       code: -1,
@@ -290,10 +305,18 @@ const downloadPackage: HandlerFn = async (data, request, _) => {
 };
 
 const packageInfoAllVersion: HandlerFn = async (data, _, __) => {
-  const scope = data.get("scope") as string;
-  const name = data.get("name") as string;
+  const scopeRaw = data.get("scope") as string;
+  const scope = decodeSafe(scopeRaw);
+  const name = decodeSafe((data.get("name") as string) || "").trim();
 
-  if (!name || !scope || !scope.startsWith("@")) {
+  if (!name || !scope) {
+    return json({
+      code: -1,
+      data: "Bad format"
+    }, 400);
+  }
+  const normalizedScope = normalizeScope(scope);
+  if (!/^[a-zA-Z0-9\-\._]+$/.test(normalizedScope)) {
     return json({
       code: -1,
       data: "Bad format"
@@ -301,8 +324,9 @@ const packageInfoAllVersion: HandlerFn = async (data, _, __) => {
   }
 
   try {
-    const result = await PublishManager.packageInfo(scope.slice(1), name);
+    const result = await PublishManager.packageInfo(normalizedScope, name);
     if (!result || result.id == "") {
+      console.warn("packageInfoAllVersion not found", { result, scopeRaw, scope, normalizedScope, name });
       return json({
         code: -1,
         data: "Not found"
@@ -323,16 +347,24 @@ const packageInfoAllVersion: HandlerFn = async (data, _, __) => {
 };
 
 const PackageInfo: HandlerFn = async (data, _, __) => {
-  const scope = data.get("scope") as string;
-  const name = data.get("name") as string;
-  const version = data.get("version") as string;
-  if (!name || !scope || !version || !scope.startsWith("@")) {
+  const scopeRaw = data.get("scope") as string;
+  const scope = decodeSafe(scopeRaw);
+  const name = decodeSafe((data.get("name") as string) || "").trim();
+  const version = decodeSafe((data.get("version") as string) || "").trim();
+  if (!name || !scope || !version) {
     return json({
       code: -1,
       data: "Bad format"
     }, 400)
-  };;
-  const result = await PublishManager.packageInfoForAVersion(scope.slice(1), name, version);
+  };
+  const normalizedScope = normalizeScope(scope);
+  if (!/^[a-zA-Z0-9\-\._]+$/.test(normalizedScope)) {
+    return json({
+      code: -1,
+      data: "Bad format"
+    }, 400)
+  }
+  const result = await PublishManager.packageInfoForAVersion(normalizedScope, name, version);
   if (result.id.length < 1) {
     return json({
       code: -1,
@@ -352,4 +384,18 @@ export function RegerPUblishRouter(frame: ResponseFrame) {
   frame.get("/package/:scope/:name/v/:version/info", PackageInfo);
   frame.get("/package/:scope/:name/info", packageInfoAllVersion)
   frame.get("/package/:scope/:name/v/:version/download", downloadPackage);
+  frame.get("/package/search/for/:keyword", async (data) => {
+    const keyword = data.get("keyword") as string;
+    if (!keyword || keyword.trim().length === 0) {
+      return json({
+        code: -1,
+        data: "Keyword cannot be empty"
+      }, 400);
+    }
+    const result = await PublishManager.searchPackage(keyword.trim());
+    return json({
+      code: 200,
+      data: result
+    });
+  })
 }

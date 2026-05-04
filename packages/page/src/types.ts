@@ -1,5 +1,24 @@
 export const HeaderLanguageKey = ['HeaderToAccount', 'HeaderToHome', 'Search', 'HeaderToAbout', 'HeaderToDocs'] as const;
 export const AboutLanguageKey = ['AboutTitle', 'AboutContent'] as const;
+export const PackageLanguageKeys = [
+  'Searching',
+  'Found',
+  'results',
+  'NoResultsFound',
+  'SearchWelcome',
+  'Readme',
+  'Version',
+  'SelectVersion',
+  'Downloads',
+  'Package',
+  'LastUpdated',
+  'Description',
+  'InstallCommand',
+  'Loading',
+  "NotFound",
+  'BackToSearch'
+] as const;
+
 export const AccountLanguageKeys = [
   'AccountSelectProfile',
   'AccountSelectPublishs',
@@ -44,7 +63,7 @@ export const AccountLanguageKeys = [
   "Copied"
 ] as const;
 export type Language = {
-  [key in (typeof HeaderLanguageKey)[number] | (typeof AboutLanguageKey)[number] | (typeof AccountLanguageKeys)[number]]: string;
+  [key in (typeof HeaderLanguageKey)[number] | (typeof AboutLanguageKey)[number] | (typeof AccountLanguageKeys)[number] | (typeof PackageLanguageKeys)[number]]: string;
 };
 export const LanguageList = ['zh', 'en'] as const;
 export interface TokenListResult {

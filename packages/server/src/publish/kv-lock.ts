@@ -3,36 +3,55 @@ import { env } from "cloudflare:workers";
 export class KVLockManager {
   private static readonly LOCK_PREFIX = "publish-lock:";
   private static readonly LOCK_TIMEOUT = 300;
-  static async acquireLock(scope: string, name: string): Promise<boolean> {
-    const lockKey = `${this.LOCK_PREFIX}${scope}/${name}`;
-    const lockValue = Date.now().toString();
+  private static normalizeScope(scope: string): string {
+    return scope.startsWith("@") ? scope.slice(1) : scope;
+  }
+  private static getLockKey(scope: string, name: string): string {
+    return `${this.LOCK_PREFIX}${this.normalizeScope(scope)}/${name}`;
+  }
+  private static parseLockTimestamp(raw: string): number {
+    const asNumber = Number.parseInt(raw, 10);
+    if (Number.isFinite(asNumber)) {
+      return asNumber;
+    }
     try {
-      const result = await env.BLOG_DATA.put(lockKey, lockValue, {
-        expirationTtl: this.LOCK_TIMEOUT,
-      });
-      const currentLock = await env.BLOG_DATA.get(lockKey);
-      if (!currentLock) {
-        await env.BLOG_DATA.put(lockKey, lockValue, {
-          expirationTtl: this.LOCK_TIMEOUT
-        });
-        return true;
+      const parsed = JSON.parse(raw) as { timestamp?: number };
+      if (parsed && typeof parsed.timestamp === "number" && Number.isFinite(parsed.timestamp)) {
+        return parsed.timestamp;
       }
-      const lockTimestamp = parseInt(currentLock);
-      if (Date.now() - lockTimestamp > this.LOCK_TIMEOUT * 1000) {
-        await env.BLOG_DATA.put(lockKey, lockValue, {
-          expirationTtl: this.LOCK_TIMEOUT
-        });
-        return true;
+    } catch {
+      return 0;
+    }
+    return 0;
+  }
+  static async acquireLock(scope: string, name: string): Promise<boolean> {
+    const lockKey = this.getLockKey(scope, name);
+    const now = Date.now();
+    const lockValue = JSON.stringify({
+      id: crypto.randomUUID(),
+      timestamp: now
+    });
+    try {
+      const currentLock = await env.BLOG_DATA.get(lockKey);
+      if (currentLock) {
+        const lockTimestamp = this.parseLockTimestamp(currentLock);
+        if (now - lockTimestamp <= this.LOCK_TIMEOUT * 1000) {
+          return false;
+        }
       }
 
-      return false;
+      await env.BLOG_DATA.put(lockKey, lockValue, {
+        expirationTtl: this.LOCK_TIMEOUT,
+      });
+      const verifyLock = await env.BLOG_DATA.get(lockKey);
+      return verifyLock === lockValue;
     } catch (error) {
       console.error("Failed to acquire lock:", error);
       return false;
     }
   }
   static async releaseLock(scope: string, name: string): Promise<void> {
-    const lockKey = `${this.LOCK_PREFIX}${scope}/${name}`;
+    const lockKey = this.getLockKey(scope, name);
 
     try {
       await env.BLOG_DATA.delete(lockKey);
@@ -41,14 +60,14 @@ export class KVLockManager {
     }
   }
   static async hasLock(scope: string, name: string): Promise<boolean> {
-    const lockKey = `${this.LOCK_PREFIX}${scope}/${name}`;
+    const lockKey = this.getLockKey(scope, name);
 
     try {
       const currentLock = await env.BLOG_DATA.get(lockKey);
       if (!currentLock) {
         return false;
       }
-      const lockTimestamp = parseInt(currentLock);
+      const lockTimestamp = this.parseLockTimestamp(currentLock);
       return Date.now() - lockTimestamp <= this.LOCK_TIMEOUT * 1000;
     } catch (error) {
       return false;

@@ -30,6 +30,7 @@ const language: {
     SelectVersion: "选择版本",
     AccountSelectProfile: "账号基础信息",
     AccountSelectPublishs: "所有你的发布包",
+    AccountSelectScope: "作用域管理",
     AccountSelectTokens: "Token",
     AccountNotLogin: "未登录",
     AccountGoLogin: "去登录",
@@ -67,7 +68,16 @@ const language: {
     TokenScopeEmpty: "全部",
     TokenPermissionPublish: "发布 (publish)",
     TokenPermissionUnpublish: "取消发布 (unpublish)",
-    TokenPermissionNone: "无"
+    TokenPermissionNone: "无",
+    // scope management
+    ScopeYourScope: "你的作用域",
+    ScopeNote: "使用 @作用域 来发布你的包",
+    ScopeCreateTitle: "创建你的作用域",
+    ScopeName: "作用域名称",
+    ScopeCreate: "创建",
+    ScopeSave: "保存",
+    ScopePlaceholderName: "留空使用默认名称",
+    ScopeCreatedSuccess: "保存成功"
   },
   en: {
     HeaderToAbout: "About",
@@ -95,6 +105,7 @@ const language: {
     HeaderToAccount: "Account",
     AccountSelectProfile: "Profile",
     AccountSelectPublishs: "All of your publish packages",
+    AccountSelectScope: "Scope Management",
     AccountSelectTokens: "Tokens",
     AccountNotLogin: "Not Login",
     AccountGoLogin: "Go to login",
@@ -133,7 +144,16 @@ const language: {
     TokenScopeEmpty: "All",
     TokenPermissionPublish: "Publish (publish)",
     TokenPermissionUnpublish: "Unpublish (unpublish)",
-    TokenPermissionNone: "None"
+    TokenPermissionNone: "None",
+    // scope management
+    ScopeYourScope: "Your Scope",
+    ScopeNote: "Use @scope to publish your packages",
+    ScopeCreateTitle: "Create Your Scope",
+    ScopeName: "Scope Name",
+    ScopeCreate: "Create",
+    ScopeSave: "Save",
+    ScopePlaceholderName: "Leave empty to use default name",
+    ScopeCreatedSuccess: "Saved successfully"
   }
 };
 let currentLanguage: typeof LanguageList[number] = 'zh';

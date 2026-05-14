@@ -3,6 +3,7 @@ import ResponseFrame from "../framework";
 import { json } from "../framework-utils";
 import { RegisterTokenRouter } from "./token";
 import { RegerPUblishRouter } from "./publish";
+import { RegisterScopeRouter } from "./scope";
 import { Auth } from "../auth";
 import { PublishManager } from "../publish/publish";
 import { TokenPermission } from "../publish/token";
@@ -53,6 +54,13 @@ function commonPublicVerify(permisson: TokenPermission): Middleware {
   }
 }
 export function RegerRoutes(frame: ResponseFrame) {
+  PublishManager.registerHook(async (user, scope, name) => {
+    const cacheKey = `account:publish:list:${user.uid}`;
+    if (await env.BLOG_DATA.get(cacheKey)) {
+      await env.BLOG_DATA.delete(cacheKey);
+    }
+  });
+
   frame.use("/account", async (c, next) => {
     const _token = c.request.headers.get("Authorization")
     if (!_token || !_token.startsWith("Bearer ")) return json({
@@ -93,4 +101,5 @@ export function RegerRoutes(frame: ResponseFrame) {
   frame.use("/publish/", commonPublicVerify(TokenPermission.publish));
   RegisterTokenRouter(frame);
   RegerPUblishRouter(frame);
+  RegisterScopeRouter(frame);
 }

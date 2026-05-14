@@ -3,9 +3,10 @@
 		<div class="account-select-content">
 			<div class="account-select-item" @click="setSelect(0)">{{ getI18n('AccountSelectProfile') }}</div>
 			<div class="account-select-item" @click="setSelect(1)">{{ getI18n('AccountSelectPublishs') }}</div>
+			<div class="account-select-item" @click="setSelect(3)">{{ getI18n('AccountSelectScope') }}</div>
 			<div class="account-select-item" @click="setSelect(2)">{{ getI18n('AccountSelectTokens') }}</div>
 		</div>
-		<div v-if="SelectIsLoading"></div>
+		<div v-if="SelectIsLoading" class="loading"></div>
 		<div v-else>
 			<div v-if="select == 0">
 				<div class="profile-root-card">
@@ -25,6 +26,24 @@
 				<div v-for="p in packages">
 					<div>{{ p.id }}</div>
 					<div>{{ p.downloaded }}</div>
+				</div>
+			</div>
+			<div v-if="select == 3">
+				<div class="profile-root-card">
+					<div class="small">{{ userScope ? getI18n('ScopeYourScope') : getI18n('ScopeCreateTitle') }}</div>
+					<div class="token-form">
+						<div class="form-group">
+							<label>{{ getI18n('ScopeName') }}</label>
+							<input v-model="newScopeName" :placeholder="getI18n('ScopePlaceholderName')" class="token-input" />
+						</div>
+						<button @click="setScope" class="generate-button">
+							{{ getI18n('ScopeSave') }}
+						</button>
+					</div>
+					<div v-if="userScope" class="token-display" style="margin-top: 12px;">
+						<div class="token-value">@{{ userScope.name }}</div>
+						<small class="token-note">{{ getI18n('ScopeNote') }}</small>
+					</div>
 				</div>
 			</div>
 			<div v-if="select == 2">
@@ -190,10 +209,13 @@ const permissions = ref({
 	unpublish: false,
 });
 const scopes = ref(['']);
+const newScopeName = ref('');
+const userScope = ref<{ name: string; created_at: string } | null>(null);
 const router = useRouter();
 onMounted(async () => {
 	await LoginStatus.waitVerify();
 	user.value = LoginStatus.user;
+	SelectIsLoading.value = false;
 });
 async function logout() {
 	if (ToastManger.isLoading) return;
@@ -231,6 +253,7 @@ function setSelect(go: number) {
 	select.value = go;
 	if (go == 2) requestTokenList();
 	else if (go == 1) listPublishPackages();
+	else if (go == 3) requestUserScope();
 	else SelectIsLoading.value = false;
 }
 
@@ -351,6 +374,38 @@ async function listPublishPackages() {
 	const data = listResultScheme.parse(res.data);
 	packages.value = data;
 	SelectIsLoading.value = false;
+}
+async function requestUserScope() {
+	if (ToastManger.isLoading) return;
+	const toast = ToastManger.useToast();
+	if (!toast) return;
+	if (!isLog.value) return;
+	const listResult = await fetchAPI('/account/scope/my', {}, 'GET', config.packageAPIHost, LoginStatus.token as string);
+	if (!listResult.ok) {
+		return toast.toast('error', `GET ${config.packageAPIHost}/account/scope/my error: ${listResult.data}`);
+	}
+	const listResultScheme = object({
+		name: string(),
+		created_at: string(),
+	});
+	const data = listResultScheme.parse(listResult.data);
+	userScope.value = data;
+	SelectIsLoading.value = false;
+}
+async function setScope() {
+	if (ToastManger.isLoading) return;
+	const toast = ToastManger.useToast();
+	if (!toast) return;
+	if (!isLog.value) return toast.toast('error', getI18n('AccountNotLogin'));
+	const body: { name?: string } = {};
+	if (newScopeName.value.trim()) {
+		body.name = newScopeName.value.trim();
+	}
+	const res = await fetchAPI('/account/scope/set', body, 'POST', config.packageAPIHost, LoginStatus.token as string);
+	if (!res.ok) return toast.toast('error', `Error: ${res.data}`);
+	toast.toast('success', getI18n('ScopeCreatedSuccess'));
+	await requestUserScope();
+	newScopeName.value = '';
 }
 </script>
 <style lang="css" scoped src="./../assets/account-vue-css.css"></style>

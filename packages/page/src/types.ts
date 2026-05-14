@@ -22,6 +22,7 @@ export const PackageLanguageKeys = [
 export const AccountLanguageKeys = [
   'AccountSelectProfile',
   'AccountSelectPublishs',
+  'AccountSelectScope',
   'AccountSelectTokens',
   'AccountNotLogin',
   'AccountGoLogin',
@@ -60,7 +61,16 @@ export const AccountLanguageKeys = [
   "TokenPermissionPublish",
   "TokenPermissionUnpublish",
   "TokenPermissionNone",
-  "Copied"
+  "Copied",
+  // scope management
+  "ScopeYourScope",
+  "ScopeNote",
+  "ScopeCreateTitle",
+  "ScopeName",
+  "ScopeCreate",
+  "ScopeSave",
+  "ScopePlaceholderName",
+  "ScopeCreatedSuccess"
 ] as const;
 export type Language = {
   [key in (typeof HeaderLanguageKey)[number] | (typeof AboutLanguageKey)[number] | (typeof AccountLanguageKeys)[number] | (typeof PackageLanguageKeys)[number]]: string;

@@ -189,7 +189,7 @@ const unpublishPackage: HandlerFn = async (data, request, _) => {
   const version = data.get("version") as string;
 
   try {
-    const result = await PublishManager.unpublishPackage(normalizedScope, name, version);
+    const result = await PublishManager.unpublishPackage(normalizedScope, name, version, user);
     return json({
       code: result.code,
       data: result.message
@@ -212,7 +212,22 @@ const ListPackage: HandlerFn = async (data, request, _) => {
   }
 
   const user = JSON.parse(_user) as User;
+
+  const cacheKey = `account:publish:list:${user.uid}`;
+  const cached = await env.BLOG_DATA.get(cacheKey);
+  if (cached) {
+    return json({
+      code: 200,
+      data: JSON.parse(cached)
+    });
+  }
+
   const result = await PublishManager.listPackages(user);
+
+  if (result.success && result.data) {
+    await env.BLOG_DATA.put(cacheKey, JSON.stringify(result.data), { expirationTtl: 60 * 5 });
+  }
+
   return json({
     code: result.code,
     data: result.data

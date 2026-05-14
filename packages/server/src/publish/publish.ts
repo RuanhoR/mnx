@@ -30,7 +30,7 @@ export class PublishManager extends PublishToken {
 	}
 
 	private static async callHooks(user: User, scope: string, name: string): Promise<void> {
-		await Promise.all(this.hooks.map(hook => hook(user, scope, name)));
+		await Promise.all(this.hooks.map((hook) => hook(user, scope, name)));
 	}
 
 	private static normalizeScope(scope: string): string {
@@ -231,7 +231,12 @@ export class PublishManager extends PublishToken {
 	/**
 	 * Unpublish package
 	 */
-	static async unpublishPackage(scope: string, name: string, versionName: string, user?: User /**version name not tag */): Promise<BaseResult> {
+	static async unpublishPackage(
+		scope: string,
+		name: string,
+		versionName: string,
+		user?: User /**version name not tag */,
+	): Promise<BaseResult> {
 		try {
 			// Find package
 			const packageResult = await supabase.pmnxPackage.select('*').eq('scope', scope).eq('name', name).limit(1);
@@ -424,13 +429,13 @@ export class PublishManager extends PublishToken {
 			}
 
 			const userScopes = scopeResult.data.map((scope) => scope.name);
-			const packagesResult = await supabase.pmnxPackage.select('id, download').in('scope', userScopes);
+			const packagesResult = await supabase.pmnxPackage.select('id, scope, name, download').in('scope', userScopes);
 			if (!packagesResult.data || packagesResult.data.length === 0) {
 				return { code: 200, message: 'No packages found', success: true, data: [] };
 			}
 			const packagesData = packagesResult.data.map((pkg) => ({
 				downloaded: pkg.download,
-				id: pkg.id.toString(),
+				id: `@${pkg.scope}/${pkg.name}`,
 			}));
 
 			return { code: 200, message: 'Packages retrieved successfully', success: true, data: packagesData };

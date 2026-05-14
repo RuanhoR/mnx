@@ -27,9 +27,6 @@
 		font-size: 16px;
 	}
 }
-:root * {
-	font-family: SongTi;
-}
 @media (prefers-color-scheme: dark) {
 	:root {
 		--text: #9ca3af;
@@ -82,10 +79,6 @@ code {
 	line-height: 135%;
 	padding: 4px 8px;
 	background: var(--code-bg);
-}
-@font-face {
-	font-family: SongTi;
-	src: url('/assets/dingliesongtypeface20241217-2.ttf');
 }
 .small {
 	font-size: 70%;

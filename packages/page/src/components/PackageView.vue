@@ -43,6 +43,9 @@
               📋
             </button>
           </div>
+          <button class="download-btn" @click="downloadPackage" :disabled="!currentDownloadUrl" v-if="currentDownloadUrl">
+            ⬇ {{ getI18n('Downloads') }}
+          </button>
         </div>
       </div>
 
@@ -92,7 +95,8 @@ import { ref, onMounted, watch, computed, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getI18n } from '../i18n';
 import { fetchAPI } from '../utils/fetchAPI';
-import { KvManger, CacheKeys } from '../utils/kvManger';
+import { CacheKeys } from '../utils/kvManger';
+import { IDBCache } from '../utils/idbCache';
 import config from '../config';
 import md from "markdown-it"
 interface PackageVersion {
@@ -100,6 +104,7 @@ interface PackageVersion {
   description?: string;
   downloads?: number;
   created_at?: string;
+  download_url?: string;
 }
 
 interface PackageData {
@@ -135,12 +140,13 @@ const fetchPackageInfo = async () => {
   try {
     const cacheKey = CacheKeys.packageInfo(scope.value, name.value);
     if (cacheEnabled) {
-      const cachedData = KvManger.getCache<PackageData>(cacheKey);
+      const cachedData = await IDBCache.get<{ packageData: PackageData; versionReadmeMap: Record<string, string>; readmeContent: string }>(cacheKey);
       if (cachedData) {
-        packageData.value = cachedData;
-        if (cachedData.all_versions) {
-          allVersions.value = cachedData.all_versions;
-          await handleVersionSelection(cachedData.version || '');
+        packageData.value = cachedData.packageData;
+        versionReadmeMap.value = cachedData.versionReadmeMap;
+        readmeContent.value = cachedData.readmeContent;
+        if (cachedData.packageData.all_versions) {
+          allVersions.value = cachedData.packageData.all_versions;
         }
         isLoading.value = false;
         return;
@@ -181,7 +187,8 @@ const fetchPackageInfo = async () => {
             version: String(v.name ?? v.version ?? ''),
             description: v.description ?? undefined,
             downloads: v.downloads ?? undefined,
-            created_at: v.create_time ?? v.created_at ?? undefined
+            created_at: v.create_time ?? v.created_at ?? undefined,
+            download_url: v.download_url ?? undefined
           }))
           : [];
 
@@ -217,7 +224,13 @@ const fetchPackageInfo = async () => {
           });
         }
         readmeContent.value = versionReadmeMap.value[initialVersion] || '';
-        if (cacheEnabled) KvManger.setCache(cacheKey, packageData.value, 5);
+        if (cacheEnabled) {
+          await IDBCache.set(cacheKey, {
+            packageData: packageData.value,
+            versionReadmeMap: versionReadmeMap.value,
+            readmeContent: readmeContent.value,
+          }, 5);
+        }
       } else {
         packageData.value = null;
         allVersions.value = [];
@@ -273,6 +286,18 @@ const formatDate = (dateString: string) => {
   });
 };
 
+const currentDownloadUrl = computed(() => {
+  if (!allVersions.value.length || !packageData.value) return ''
+  const ver = allVersions.value.find(v => v.version === packageData.value?.version)
+  return ver?.download_url || ''
+})
+
+const downloadPackage = () => {
+  if (currentDownloadUrl.value) {
+    window.open(config.packageAPIHost + currentDownloadUrl.value, '_blank')
+  }
+}
+
 const copyInstallCommand = async () => {
   if (packageData.value) {
     const command = `mbler install ${packageData.value.scope || ''}/${packageData.value.name || ''}`;
@@ -307,7 +332,6 @@ watch([packageData, allVersions], () => {
 watch([scope, name], () => {
   fetchPackageInfo();
 });
-console.log(readmeContent, mdContent)
 watch(readmeContent, async (n) => {
   if (!n) {
     if (mdContent.value) mdContent.value.innerHTML = '';
@@ -594,6 +618,32 @@ onMounted(() => {
 
 .back-btn:hover {
   background: #9933cc;
+}
+
+.download-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: center;
+}
+
+.download-btn:hover:not(:disabled) {
+  background: #8a2be2;
+}
+
+.download-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 @media (max-width: 768px) {

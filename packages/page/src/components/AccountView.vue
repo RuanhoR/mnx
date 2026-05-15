@@ -23,9 +23,16 @@
 				</div>
 			</div>
 			<div v-if="select == 1">
-				<div v-for="p in packages">
-					<div>{{ p.id }}</div>
-					<div>{{ p.downloaded }}</div>
+				<div class="publish-list-root">
+					<div class="publish-list-header">
+						<span>{{ getI18n('Package') }}</span>
+						<span>{{ getI18n('Downloads') }}</span>
+					</div>
+					<div v-for="p in packages" :key="p.id" class="publish-list-item" @click="goToPackage(p.id)">
+						<span class="publish-list-name">{{ formatPackageId(p.id) }}</span>
+						<span class="publish-list-downloads">{{ p.downloaded }}</span>
+					</div>
+					<div v-if="packages.length === 0" class="publish-list-empty">—</div>
 				</div>
 			</div>
 			<div v-if="select == 3">
@@ -392,6 +399,17 @@ async function requestUserScope() {
 	userScope.value = data;
 	SelectIsLoading.value = false;
 }
+function formatPackageId(id: string): string {
+  return id.replace(/^@/, '')
+}
+
+function goToPackage(id: string) {
+  const parts = id.replace(/^@/, '').split('/')
+  if (parts.length >= 2) {
+    router.push(`/package/${parts[0]}/${parts.slice(1).join('/')}`)
+  }
+}
+
 async function setScope() {
 	if (ToastManger.isLoading) return;
 	const toast = ToastManger.useToast();

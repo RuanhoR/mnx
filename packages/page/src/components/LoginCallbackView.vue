@@ -11,7 +11,7 @@ import { getI18n } from '../i18n';
 import { useRouter } from 'vue-router';
 import { KvKeys, KvManger } from '../utils/kvManger';
 const router = useRouter();
-const hasURLParam = new URLSearchParams(location.search).has('token');
+const hasURLParam = new URLSearchParams(location.search).has('token') || new URLSearchParams(location.search).has('code');
 onMounted(async () => {
 	LoginStatus.onVeirfy();
 	await LoginStatus.waitVerify();

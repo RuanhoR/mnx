@@ -65,12 +65,27 @@ export class LoginStatus {
     KvManger.set(KvKeys.tmpVerifyURL, href)
     location.href = `https://account.ruanhor.dpdns.org/oauth2?client_id=MmFmMmFhZjQvIls3ZWJlMzAyOC1mMDU3LTQ1YWEtOTBkMC02Zjg3N2E1ZTgxODM=&redirect_uri=${encodeURIComponent('https://pmnx.qzz.io/_callback')}&response_type=code`;
   }
-  static onVeirfy() {
+  static async onVeirfy() {
     const urlParam = new URLSearchParams(location.search);
+    const code = urlParam.get('code');
     const token = urlParam.get('token');
-    if (!token) {
-      return;
-    };
-    this.refurshToken(token);
+    if (code) {
+      const client_id = "MmFmMmFhZjQvIls3ZWJlMzAyOC1mMDU3LTQ1YWEtOTBkMC02Zjg3N2E1ZTgxODM=";
+      const redirect_uri = "https://pmnx.qzz.io/_callback";
+      const response = await fetchAPI<{ token: string }>(
+        "/oauth/token",
+        { code, client_id, redirect_uri },
+        "POST",
+        config.accountAPIHost
+      );
+      if (response.ok && response.data?.token) {
+        this.refurshToken(response.data.token);
+      }
+      const newUrl = new URL(location.href);
+      newUrl.searchParams.delete("code");
+      window.history.replaceState({}, document.title, newUrl.pathname);
+    } else if (token) {
+      this.refurshToken(token);
+    }
   }
 }

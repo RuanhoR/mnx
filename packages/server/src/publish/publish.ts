@@ -540,7 +540,7 @@ export class PublishManager extends PublishToken {
 	/**
 	 * Download package version and update download counter
 	 */
-	static async downloadVersion(scope: string, name: string, version: string): Promise<{ success: boolean; data?: Blob; error?: string }> {
+	static async downloadVersion(scope: string, name: string, version: string): Promise<{ success: boolean; data?: ReadableStream; error?: string; size?: number }> {
 		try {
 			const normalizedScope = this.normalizeScope(scope);
 			const normalizedName = name.trim();
@@ -555,12 +555,30 @@ export class PublishManager extends PublishToken {
 				return { success: false, error: 'Version not found' };
 			}
 
-			// Get file from Supabase Storage
+			// Stream file from Supabase Storage
 			const filePath = `package/${normalizedScope}/${normalizedName}/${version}`;
-			const downloadResult = await supabase.client.storage.from('mnx').download(filePath);
+			const { data: signedUrlData, error: signedUrlError } = await supabase.client.storage
+				.from('mnx')
+				.createSignedUrl(filePath, 60);
 
-			if (downloadResult.error || !downloadResult.data) {
-				return { success: false, error: downloadResult.error?.message || 'File not found' };
+			let stream: ReadableStream;
+			let size = 0;
+
+			if (signedUrlError || !signedUrlData?.signedUrl) {
+				// Fall back to download
+				const downloadResult = await supabase.client.storage.from('mnx').download(filePath);
+				if (downloadResult.error || !downloadResult.data) {
+					return { success: false, error: downloadResult.error?.message || 'File not found' };
+				}
+				stream = downloadResult.data.stream();
+				size = downloadResult.data.size;
+			} else {
+				const response = await fetch(signedUrlData.signedUrl);
+				if (!response.ok || !response.body) {
+					return { success: false, error: 'Failed to stream file' };
+				}
+				stream = response.body;
+				size = parseInt(response.headers.get('content-length') || '0');
 			}
 
 			// Update download counter
@@ -571,12 +589,16 @@ export class PublishManager extends PublishToken {
 				})
 				.eq('id', packageData.id);
 
-			// Clear cache to ensure fresh data on next request
-			if (await env.BLOG_DATA.get(`mnx-packages:cache:${normalizedScope}/${normalizedName}`)) {
-				await env.BLOG_DATA.delete(`mnx-packages:cache:${normalizedScope}/${normalizedName}`);
+			// Manually update cache download count instead of clearing
+			const cacheKey = `mnx-packages:cache:${normalizedScope}/${normalizedName}`;
+			const existingCache = await env.BLOG_DATA.get(cacheKey);
+			if (existingCache) {
+				const parsed = JSON.parse(existingCache);
+				parsed.download = packageData.download + 1;
+				await env.BLOG_DATA.put(cacheKey, JSON.stringify(parsed));
 			}
 
-			return { success: true, data: downloadResult.data };
+			return { success: true, data: stream, size };
 		} catch (error) {
 			console.error('Download failed:', error);
 			return {

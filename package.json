@@ -3,11 +3,15 @@
 	"version": "0.0.0",
 	"description": "",
 	"license": "ISC",
-	"author": "",
+	"author": {
+		"name": "ruanhor",
+		"url": "https://github.com/RuanhoR",
+		"email": "root@ruanhor.dpdns.org"
+	},
 	"type": "commonjs",
 	"main": "index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"prepare": "simple-git-hooks"
 	},
 	"workspaces": [
 		"packages/server",
@@ -15,6 +19,8 @@
 	],
 	"devDependencies": {
 		"@types/node": "25.0.9",
+		"picocolors": "^1.1.1",
+		"simple-git-hooks": "^2.13.1",
 		"typescript": "5.9.3",
 		"wrangler": "4.71.0"
 	}

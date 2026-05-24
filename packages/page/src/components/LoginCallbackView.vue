@@ -1,8 +1,10 @@
 <template>
-	<div v-if="!LoginStatus.isLoading || !hasURLParam">
+	<div v-if="(!isLoading && !isLoging) || !hasURLParam">
 		<div>{{ getI18n('VerifyError') }}</div>
 	</div>
-	<div class="loading" v-else></div>
+	<div class="loading" v-else>
+		<div>Plase wait</div>
+	</div>
 </template>
 <script setup lang="ts">
 import { onMounted } from 'vue';
@@ -11,6 +13,8 @@ import { getI18n } from '../i18n';
 import { useRouter } from 'vue-router';
 import { KvKeys, KvManger } from '../utils/kvManger';
 const router = useRouter();
+const isLoading = LoginStatus.isLoading;
+const isLoging = LoginStatus.isLog;
 const hasURLParam = new URLSearchParams(location.search).has('token') || new URLSearchParams(location.search).has('code');
 onMounted(async () => {
 	LoginStatus.onVeirfy();

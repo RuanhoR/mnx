@@ -165,7 +165,8 @@ dist
 .env*
 !.env.example
 .wrangler/
-/packages/server/wrangler/wrangler.jsonc
-/packages/server/wrangler/worker-configuration.d.ts
-/packages/server/nodejs/src
-/packages/server/wrangler/src
+packages/server/wrangler/wrangler.jsonc
+packages/server/wrangler/worker-configuration.d.ts
+packages/server/nodejs/src
+packages/server/wrangler/src
+wrangler.jsonc

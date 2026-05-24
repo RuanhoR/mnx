@@ -67,54 +67,22 @@
 								<label class="checkbox-label">
 									<input type="checkbox" v-model="permissions.publish" />
 									<svg class="checkbox-svg" width="16" height="16" viewBox="0 0 16 16">
-										<rect
-											v-if="!permissions.publish"
-											x="1"
-											y="1"
-											width="14"
-											height="14"
-											rx="2"
-											stroke="currentColor"
-											fill="none"
-											stroke-width="2"
-										/>
+										<rect v-if="!permissions.publish" x="1" y="1" width="14" height="14" rx="2" stroke="currentColor"
+											fill="none" stroke-width="2" />
 										<rect v-else x="1" y="1" width="14" height="14" rx="2" fill="currentColor" />
-										<path
-											v-if="permissions.publish"
-											d="M4 8L7 11L12 5"
-											stroke="white"
-											stroke-width="2"
-											fill="none"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-										/>
+										<path v-if="permissions.publish" d="M4 8L7 11L12 5" stroke="white" stroke-width="2" fill="none"
+											stroke-linecap="round" stroke-linejoin="round" />
 									</svg>
 									<span>{{ getI18n('TokenPublishPermission') }}</span>
 								</label>
 								<label class="checkbox-label">
 									<input type="checkbox" v-model="permissions.unpublish" />
 									<svg class="checkbox-svg" width="16" height="16" viewBox="0 0 16 16">
-										<rect
-											v-if="!permissions.unpublish"
-											x="1"
-											y="1"
-											width="14"
-											height="14"
-											rx="2"
-											stroke="currentColor"
-											fill="none"
-											stroke-width="2"
-										/>
+										<rect v-if="!permissions.unpublish" x="1" y="1" width="14" height="14" rx="2" stroke="currentColor"
+											fill="none" stroke-width="2" />
 										<rect v-else x="1" y="1" width="14" height="14" rx="2" fill="currentColor" />
-										<path
-											v-if="permissions.unpublish"
-											d="M4 8L7 11L12 5"
-											stroke="white"
-											stroke-width="2"
-											fill="none"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-										/>
+										<path v-if="permissions.unpublish" d="M4 8L7 11L12 5" stroke="white" stroke-width="2" fill="none"
+											stroke-linecap="round" stroke-linejoin="round" />
 									</svg>
 									<span>{{ getI18n('TokenUnpublishPermission') }} (unpublish)</span>
 								</label>
@@ -123,28 +91,22 @@
 						<div class="form-group">
 							<label>{{ getI18n('TokenScope') }}</label>
 							<div class="scopes-group">
-								<div v-for="(scope, index) in scopes" :key="index" class="scope-input-row">
-									<input
-										:value="scope"
-										v-model="scopes[index]"
-										:placeholder="getI18n('TokenScopePlaceholder') + ' ' + (index + 1)"
-										class="scope-input"
-									/>
-									<button v-if="scopes.length > 1" @click="removeScope(index)" type="button" class="scope-remove">×</button>
+								<div v-for="(_, index) in scopes" :key="index" class="scope-input-row">
+									<input v-model="scopes[index]" :placeholder="getI18n('TokenScopePlaceholder') + ' ' + (index + 1)"
+										class="scope-input" />
+									<button v-if="scopes.length > 1" @click="removeScope(index)" type="button"
+										class="scope-remove">×</button>
 								</div>
 								<button @click="addScope" type="button" class="scope-add">+</button>
 							</div>
 						</div>
 						<div class="form-group">
 							<label>{{ getI18n('TokenExpiration') }}</label>
-							<input
-								type="datetime-local"
-								v-model="expirationLocal"
-								:placeholder="getI18n('TokenExpirationPlaceholder')"
-								class="token-input"
-							/>
+							<input type="datetime-local" v-model="expirationLocal"
+								:placeholder="getI18n('TokenExpirationPlaceholder')" class="token-input" />
 						</div>
-						<button @click="genToken" class="generate-button" :disabled="!permissions.publish && !permissions.unpublish">
+						<button @click="genToken" class="generate-button"
+							:disabled="!permissions.publish && !permissions.unpublish">
 							{{ getI18n('TokenGenerate') }}
 						</button>
 					</div>
@@ -184,7 +146,7 @@
 	</div>
 	<div v-else>
 		<div>{{ getI18n('AccountNotLogin') }}</div>
-		<div @click="toLogin()">{{ getI18n('AccountGoLogin') }}</div>
+		<div @click="toLogin()" style="cursor: pointer;width:100%;text-align: center;">{{ getI18n('AccountGoLogin') }}</div>
 	</div>
 </template>
 <script setup lang="ts">
@@ -400,14 +362,14 @@ async function requestUserScope() {
 	SelectIsLoading.value = false;
 }
 function formatPackageId(id: string): string {
-  return id.replace(/^@/, '')
+	return id.replace(/^@/, '')
 }
 
 function goToPackage(id: string) {
-  const parts = id.replace(/^@/, '').split('/')
-  if (parts.length >= 2) {
-    router.push(`/package/${parts[0]}/${parts.slice(1).join('/')}`)
-  }
+	const parts = id.replace(/^@/, '').split('/')
+	if (parts.length >= 2) {
+		router.push(`/package/${parts[0]}/${parts.slice(1).join('/')}`)
+	}
 }
 
 async function setScope() {

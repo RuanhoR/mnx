@@ -1,14 +1,19 @@
 {
-  "$schema": "./../../node_modules/wrangler/config-schema.json",
+  "$schema": "./../../../node_modules/wrangler/config-schema.json",
   "name": "pmnx-server",
   "main": "src/index.ts",
   "compatibility_date": "2026-04-19",
   "observability": {
     "enabled": true
   },
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "kv_namespaces": [
-    { "id": "5af2add8a2e140e2a517b739ed002b5d", "binding": "BLOG_DATA" }
+    {
+      "id": "5af2add8a2e140e2a517b739ed002b5d",
+      "binding": "BLOG_DATA"
+    }
   ],
   "vars": {
     "RESEND_KEY": "YOUR RESEND API KEY",

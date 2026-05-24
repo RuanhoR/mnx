@@ -102,6 +102,7 @@ export const config = {
 	passworditeration: 2000,
 	host: 'https://d.pmnx.qzz.io',
 	allowCors: 'pmnx.qzz.io',
+	accountApiHost: env.ACCOUNT_API_HOST,
 };
 
 type MiddlewareFn = (context: MiddlewareContext, next: () => Promise<Response>) => Response | Promise<Response>;

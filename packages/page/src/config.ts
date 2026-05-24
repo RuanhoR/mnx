@@ -1,4 +1,3 @@
 export default {
-  accountAPIHost: "https://a.p.z.ruanhor.dpdns.org",
-  packageAPIHost: "https://d.pmnx.qzz.io"
-}
+	packageAPIHost: 'https://d.pmnx.qzz.io',
+};

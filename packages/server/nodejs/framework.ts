@@ -266,7 +266,8 @@ export function parseStringToArray(str: string): string[] {
 export const config = {
   passworditeration: parseInt(process.env.PASSWORD_ITERATIONS || '2000', 10),
   host: process.env.HOST || 'http://localhost:3000',
-  allowCors: process.env.ALLOW_CORS || 'localhost'
+  allowCors: process.env.ALLOW_CORS || 'localhost',
+  accountApiHost: process.env.ACCOUNT_API_HOST || 'https://a.p.z.ruanhor.dpdns.org'
 }
 
 type MiddlewareFn = (context: MiddlewareContext, next: () => Promise<Response>) => Response | Promise<Response>

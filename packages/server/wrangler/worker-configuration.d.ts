@@ -2,6 +2,7 @@ interface Env {
   BLOG_DATA: KVNamespace
   EXPO_PUBLIC_SUPABASE_URL: string
   EXPO_PUBLIC_SUPABASE_KEY: string
+  ACCOUNT_API_HOST: string
 }
 
 interface ExecutionContext {

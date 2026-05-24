@@ -1,9 +1,8 @@
-import ResponseFrame, { KV } from '../framework';
+import ResponseFrame, { KV, config } from '../framework';
 import { json } from '../framework-utils';
 import { RegisterTokenRouter } from './token';
 import { RegerPUblishRouter } from './publish';
 import { RegisterScopeRouter } from './scope';
-import { Auth } from '../auth';
 import { PublishManager } from '../publish/publish';
 import { TokenPermission } from '../publish/token';
 import { Middleware } from '../types';
@@ -74,37 +73,81 @@ export function RegerRoutes(frame: ResponseFrame) {
 				data: 'this route must have token',
 			});
 		const token = _token.slice(7);
-		const uidString = await KV.get(`user-token:${token}`);
-		if (!uidString) {
+
+		const accountRes = await fetch(`${config.accountApiHost}/serive/v0/self_info`, {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${token}`,
+				'Content-Type': 'application/json',
+			},
+		});
+		const accountResult = (await accountRes.json()) as { code: number; data?: any };
+		if (!accountResult || accountResult.code !== 200 || !accountResult.data) {
 			return json({
 				code: -1,
 				data: 'invalid token',
 			});
 		}
 
-		const uid = parseInt(uidString);
-		if (isNaN(uid)) {
-			return json({
-				code: -1,
-				data: 'invalid user data',
-			});
-		}
-
-		const userResult = await Auth.find({ id: uid });
-		if (!userResult.data || userResult.data.length === 0) {
-			return json({
-				code: -1,
-				data: 'user not found',
-			});
-		}
-
-		const user = userResult.data[0];
-		const userWithToken = { ...user, token };
+		const userWithToken = { ...accountResult.data, token };
 		c.paramMap.set('__user', JSON.stringify(userWithToken));
 		return await next();
 	});
 	frame.use('/unpublish/', commonPublicVerify(TokenPermission.unpublish));
 	frame.use('/publish/', commonPublicVerify(TokenPermission.publish));
+	frame.post('/oauth/token', async (_data, request) => {
+		const body = await request.json().catch(() => ({}));
+		const accountRes = await fetch(`${config.accountApiHost}/oauth/token`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body),
+		});
+		const result = await accountRes.json();
+		return json(result as object, accountRes.status);
+	});
+	frame.post('/serive/v0/logout', async (_data, request) => {
+		const _token = request.headers.get('Authorization');
+		const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+		if (_token) headers['Authorization'] = _token;
+
+		const accountRes = await fetch(`${config.accountApiHost}/serive/v0/logout`, {
+			method: 'POST',
+			headers,
+			body: '{}',
+		});
+		const result = await accountRes.json();
+		return json(result as object, accountRes.status);
+	});
+	frame.post('/serive/v0/self_info', async (_data, request) => {
+		const _token = request.headers.get('Authorization');
+		if (!_token || !_token.startsWith('Bearer '))
+			return json({
+				code: -1,
+				data: 'this route must have token',
+			});
+		const token = _token.slice(7);
+
+		const accountRes = await fetch(`${config.accountApiHost}/serive/v0/self_info`, {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${token}`,
+				'Content-Type': 'application/json',
+			},
+		});
+		const accountResult = (await accountRes.json()) as { code: number; data?: any };
+		if (!accountResult || accountResult.code !== 200 || !accountResult.data) {
+			return json({
+				code: -1,
+				data: 'invalid token',
+			});
+		}
+
+		const { password, friends, friends_request, ...userData } = accountResult.data;
+		return json({
+			code: 200,
+			data: userData,
+		});
+	});
 	RegisterTokenRouter(frame);
 	RegerPUblishRouter(frame);
 	RegisterScopeRouter(frame);

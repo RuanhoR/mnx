@@ -16,7 +16,7 @@ export class LoginStatus {
 		this.isLog.value = false;
 		this.user = null;
 		this.tasks = new Promise<void>((resolve) => {
-			fetchAPI('serive/v0/self_info', {}, 'POST', config.accountAPIHost, this.token as string)
+			fetchAPI('serive/v0/self_info', {}, 'POST', config.packageAPIHost, this.token as string)
 				.then((r) => {
 					if (r.ok && r.code == 200 && typeof r.data == 'object') {
 						this.isLog.value = true;
@@ -72,7 +72,7 @@ export class LoginStatus {
 		if (code) {
 			const client_id = 'MmFmMmFhZjQvIls3ZWJlMzAyOC1mMDU3LTQ1YWEtOTBkMC02Zjg3N2E1ZTgxODM=';
 			const redirect_uri = 'https://pmnx.qzz.io/_callback';
-			const response = await fetchAPI<{ token: string }>('/oauth/token', { code, client_id, redirect_uri }, 'POST', config.accountAPIHost);
+			const response = await fetchAPI<{ token: string }>('/oauth/token', { code, client_id, redirect_uri }, 'POST', config.packageAPIHost);
 			if (response.ok && response.data?.token) {
 				this.refurshToken(response.data.token);
 			}

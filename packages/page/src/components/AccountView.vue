@@ -191,7 +191,7 @@ async function logout() {
 	const toast = ToastManger.useToast();
 	if (!toast) return;
 	toast.toast('info', getI18n('AccountInfoLogoutToast'));
-	const logoutResult = await fetchAPI('/serive/v0/logout', {}, 'POST', config.accountAPIHost, LoginStatus.token as string);
+	const logoutResult = await fetchAPI('/serive/v0/logout', {}, 'POST', config.packageAPIHost, LoginStatus.token as string);
 	if (!logoutResult.ok) {
 		return toast.toast('error', `${getI18n('AccountLogout')}: Error: ${logoutResult.data}`);
 	}

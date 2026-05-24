@@ -79,6 +79,7 @@ export const config: {
   readonly passworditeration: number;
   readonly host: string;
   readonly allowCors: string;
+  readonly accountApiHost: string;
 };
 
 export function json(obj: object, status?: number): Response;

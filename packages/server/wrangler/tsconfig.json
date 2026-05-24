@@ -15,6 +15,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "exclude": ["test", "wrangler", "nodejs"],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "worker-configuration.d.ts"]
 }

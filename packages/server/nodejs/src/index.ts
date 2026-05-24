@@ -22,6 +22,7 @@ async function handleRequest(req: import('http').IncomingMessage, res: import('h
       body: (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'DELETE') ? body : undefined
     })
     const frame = new ResponseFrame(request)
+    RegerRoutes(frame)
     const response = await frame.handlerRequest()
     const respHeaders: Record<string, string | string[]> = {}
     response.headers.forEach((v, k) => { respHeaders[k] = v })

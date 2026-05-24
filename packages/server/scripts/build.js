@@ -35,10 +35,8 @@ function buildCloudflare() {
   console.log('[build] Copying wrangler/framework.ts -> wrangler/src/framework.ts')
   cpSync(join(WRANGLER_DIR, 'framework.ts'), join(wranglerSrc, 'framework.ts'))
 
-  console.log('[build] Installing dependencies...')
-  execSync('pnpm install', { cwd: WRANGLER_DIR, stdio: 'inherit' })
   console.log('[build] Running wrangler deploy...')
-  execSync('pnpm wrangler deploy', { cwd: WRANGLER_DIR, stdio: 'inherit' })
+  execSync('pnpm wrangler deploy --config wrangler/wrangler.jsonc', { cwd: ROOT, stdio: 'inherit' })
   console.log('[build] Cloudflare deploy complete.')
 }
 
@@ -58,10 +56,10 @@ function buildNodejs() {
   cpSync(join(NODEJS_DIR, 'index.ts'), join(nodeSrc, 'index.ts'))
 
   console.log('[build] Installing dependencies...')
-  execSync('pnpm install', { cwd: NODEJS_DIR, stdio: 'inherit' })
+  execSync('pnpm install --ignore-workspace --ignore-scripts', { cwd: NODEJS_DIR, stdio: 'inherit' })
 
   console.log('[build] Bundling with rolldown...')
-  execSync('npx rolldown -c', { cwd: NODEJS_DIR, stdio: 'inherit' })
+  execSync('pnpm exec rolldown -c', { cwd: NODEJS_DIR, stdio: 'inherit' })
   console.log('[build] Node.js build complete.')
 }
 

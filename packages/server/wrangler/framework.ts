@@ -138,7 +138,7 @@ class ResponseFrame {
 				return new Response(null, {
 					status: 204,
 					headers: {
-						'Access-Control-Allow-Origin': '*' || allowed,
+						'Access-Control-Allow-Origin': allowed,
 						'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 						'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
 						'Access-Control-Allow-Credentials': 'true',
@@ -210,7 +210,7 @@ class ResponseFrame {
 					if (u.hostname === config.allowCors || u.hostname.endsWith('.' + config.allowCors)) allowed = origin;
 				} catch {}
 			}
-			result.headers.append('Access-Control-Allow-Origin', '*' || allowed);
+			result.headers.append('Access-Control-Allow-Origin', allowed);
 			result.headers.append('Access-Control-Allow-Credentials', 'true');
 			return result;
 		} catch (err) {

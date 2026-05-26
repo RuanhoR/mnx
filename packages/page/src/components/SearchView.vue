@@ -12,8 +12,8 @@
       </div>
     </div>
 
-    <div v-if="isLoading" class="loading">
-      <div class="loading-spinner"></div>
+    <div v-if="isLoading">
+      <div class="loading"></div>
       <p>{{ getI18n('Searching') }}</p>
     </div>
 
@@ -184,23 +184,6 @@ watch(debouncedKeyword, (newKeyword) => {
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
-}
-
-/* Ensure parent doesn't inherit animation so text doesn't rotate */
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: none !important;
-}
-.loading-spinner {
-  display: inline-block;
-  will-change: transform;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 .error p {

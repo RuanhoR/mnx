@@ -78,7 +78,7 @@
   </div>
 
   <div v-else-if="isLoading" class="loading">
-    <div class="loading-spinner"></div>
+    <div class="loading"></div>
     <p>{{ getI18n('Loading') }}</p>
   </div>
 
@@ -579,26 +579,6 @@ onMounted(() => {
   text-align: center;
   margin: 4rem 0;
   color: var(--text);
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border);
-  border-top: 3px solid var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
 }
 
 .error p {

@@ -2,7 +2,8 @@
 	<div v-if="(!isLoading && !isLoging) || !hasURLParam">
 		<div>{{ getI18n('VerifyError') }}</div>
 	</div>
-	<div class="loading" v-else>
+	<div v-else>
+		<div class="loading"></div>
 		<div>Plase wait</div>
 	</div>
 </template>

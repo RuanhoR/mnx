@@ -1,5 +1,5 @@
 import ResponseFrame, { KV, config } from '../framework';
-import { json } from '../framework-utils';
+import { json } from '../_utils';
 import { RegisterTokenRouter } from './token';
 import { RegerPUblishRouter } from './publish';
 import { RegisterScopeRouter } from './scope';

@@ -1,5 +1,5 @@
 import ResponseFrame, { KV } from '../framework';
-import { json, verifyType } from '../framework-utils';
+import { json, verifyType } from '../_utils';
 import { PublishManager } from '../publish/publish';
 import { KVLockManager } from '../publish/kv-lock';
 import { HandlerFn, User, PublishMetadata } from '../types';

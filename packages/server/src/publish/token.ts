@@ -1,6 +1,5 @@
 import { DB } from '../framework';
 import { MNXPublishToken, User, FindTokenParam, UpdateTokenParams } from '../types';
-import { uuidv4 } from '../utils/uuid';
 
 export enum TokenPermission {
 	unpublish = 0b1,
@@ -48,7 +47,7 @@ export class PublishToken {
 		scopes: string[],
 		expirationTime?: number,
 	): Promise<any | MNXPublishToken | null> {
-		const token = uuidv4();
+		const token = crypto.randomUUID();
 		const permissionBitmask = permissions.reduce((acc, perm) => acc | perm, 0);
 
 		const result = await DB.publishTokens

@@ -1,6 +1,6 @@
 import ResponseFrame from '../framework';
 import { PublishToken, TokenPermission } from '../publish/token';
-import { json } from '../framework-utils';
+import { json } from '../_utils';
 interface TokenGenerationRequest {
 	name: string;
 	permissions: string[];

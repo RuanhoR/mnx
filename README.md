@@ -16,8 +16,17 @@ git clone git@github.com:RuanhoR/mnx.git
 
 ### Server
 
+### Cloudflare
+
 Create packages/server/wrangler.jsonc with your supabase account and resend account.  
+Then, add your account system.(The source code use other project's account system)
 Then, deploy with cloudflare.
+If you can't use supsbase storage, you can change Stroage (packages/server/wrangler/framework.ts) to use your way.
+
+### Nodejs
+
+Create your postgresql and redis.
+Change frame.ts
 
 ### Client
 

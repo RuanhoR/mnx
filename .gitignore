@@ -159,14 +159,14 @@ dist
 .pnp.\*
 
 # wrangler project
-
+packages/server/wrangler/worker-configuration.d.ts
 .dev.vars*
 !.dev.vars.example
 .env*
 !.env.example
 .wrangler/
 packages/server/wrangler/wrangler.jsonc
-packages/server/wrangler/worker-configuration.d.ts
+worker-configuration.d.ts
 packages/server/nodejs/src
 packages/server/wrangler/src
 wrangler.jsonc

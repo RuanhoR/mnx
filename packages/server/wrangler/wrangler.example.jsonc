@@ -20,5 +20,11 @@
     "EXPO_PUBLIC_SUPABASE_URL": "YOUR SUPABASE API HOST",
     "EXPO_PUBLIC_SUPABASE_KEY": "YOUR SUPABASE KEY",
     "ACCOUNT_API_HOST": "https://a.p.z.ruanhor.dpdns.org"
-  }
+  },
+  "r2_buckets": [
+    {
+      "bucket_name": "pub",
+      "binding": "R2"
+    }
+  ]
 }

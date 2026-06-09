@@ -154,7 +154,7 @@ import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { getI18n, currentLanguage } from '../i18n';
 import { LoginStatus } from '../utils/loginStatus';
-import type { User } from '../../../server/src/types';
+import type { User } from '../utils/loginStatus';
 import { formatTime } from '../i18n/date';
 import { ToastManger } from '../utils/toastManger';
 import { fetchAPI } from '../utils/fetchAPI';

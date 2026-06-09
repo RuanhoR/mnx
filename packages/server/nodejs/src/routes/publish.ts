@@ -390,7 +390,7 @@ const downloadPackage: HandlerFn = async (data, request, _) => {
 					code: -1,
 					data: 'no data',
 				},
-				201,
+				404,
 			);
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/zip',
@@ -409,7 +409,7 @@ const downloadPackage: HandlerFn = async (data, request, _) => {
 		}
 		return new Response(downloadResult.data, { headers, status: 200 });
 	} catch (error) {
-		console.error(`Download route error for @${scope.slice(1)}/${name} v${version}:`, error);
+		console.error(`Download route error for @${normalizedScope}/${name} v${version}:`, error);
 
 		return json(
 			{
@@ -520,7 +520,7 @@ const PackageInfo: HandlerFn = async (data, _, __) => {
 		200,
 	);
 };
-export function RegerPUblishRouter(frame: ResponseFrame) {
+export function RegisterPublishRouter(frame: ResponseFrame) {
 	frame.post('/publish/session/:scope/:name/create', uploadMetadata);
 	frame.post('/publish/session/:session/upload', uploadZip);
 	frame.post('/unpublish/:scope/:name/:version', unpublishPackage);

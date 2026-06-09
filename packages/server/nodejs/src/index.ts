@@ -1,6 +1,6 @@
 import { createServer } from 'http'
 import ResponseFrame from './framework'
-import { RegerRoutes } from './routes'
+import { RegisterRoutes } from './routes'
 
 const PORT = parseInt(process.env.PORT || '3000', 10)
 
@@ -22,7 +22,7 @@ async function handleRequest(req: import('http').IncomingMessage, res: import('h
       body: (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'DELETE') ? body : undefined
     })
     const frame = new ResponseFrame(request)
-    RegerRoutes(frame)
+    RegisterRoutes(frame)
     const response = await frame.handlerRequest()
     const respHeaders: Record<string, string | string[]> = {}
     response.headers.forEach((v, k) => { respHeaders[k] = v })

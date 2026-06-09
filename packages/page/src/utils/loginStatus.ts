@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-interface User {
+export interface User {
   uid: number
   name: string
   mail: string
@@ -24,7 +24,7 @@ export class LoginStatus {
 		this.tasks = new Promise<void>((resolve) => {
 			fetchAPI('serive/v0/self_info', {}, 'POST', config.packageAPIHost, this.token as string)
 				.then((r) => {
-					if (r.ok && r.code == 200 && typeof r.data == 'object') {
+					if (r.ok && r.code == 200 && r.data !== null && typeof r.data == 'object' && !Array.isArray(r.data)) {
 						this.isLog.value = true;
 						KvManager.set(KvKeys.token, this.token as string);
 						this.user = r.data;

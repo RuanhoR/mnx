@@ -1,7 +1,7 @@
 import ResponseFrame, { KV } from '../framework';
 import { json } from '../framework-utils';
 import { RegisterTokenRouter } from './token';
-import { RegerPUblishRouter } from './publish';
+import { RegisterPublishRouter } from './publish';
 import { RegisterScopeRouter } from './scope';
 import { Auth } from '../auth';
 import { PublishManager } from '../publish/publish';
@@ -58,7 +58,7 @@ function commonPublicVerify(permisson: TokenPermission): Middleware {
 		return await next();
 	};
 }
-export function RegerRoutes(frame: ResponseFrame) {
+export function RegisterRoutes(frame: ResponseFrame) {
 	PublishManager.registerHook(async (user, scope, name) => {
 		const cacheKey = `account:publish:list:${user.uid}`;
 		if (await KV.get(cacheKey)) {
@@ -106,6 +106,6 @@ export function RegerRoutes(frame: ResponseFrame) {
 	frame.use('/unpublish/', commonPublicVerify(TokenPermission.unpublish));
 	frame.use('/publish/', commonPublicVerify(TokenPermission.publish));
 	RegisterTokenRouter(frame);
-	RegerPUblishRouter(frame);
+	RegisterPublishRouter(frame);
 	RegisterScopeRouter(frame);
 }

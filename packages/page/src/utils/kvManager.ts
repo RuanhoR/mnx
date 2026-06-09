@@ -1,4 +1,4 @@
-export class KvManger {
+export class KvManager {
   static set(key: KvKeys, value: string) {
     return localStorage.setItem(key, value)
   }
@@ -58,7 +58,7 @@ export class KvManger {
 
 export enum KvKeys {
   token = "token",
-  tmpVerifyURL = "tmp_verify_url_che"
+  tmpVerifyURL = "tmp_verify_url"
 }
 
 // 缓存键名常量

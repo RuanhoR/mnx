@@ -28,7 +28,7 @@ If you can't use supsbase storage, you can change Stroage (packages/server/wrang
 Create your postgresql and redis.
 Change frame.ts
 
-### Client
+### Client (page)
 
-1. Edit packages/client/src/config.ts.
+1. Edit packages/page/src/config.ts.
 2. Build and Deploy to your static file cdn

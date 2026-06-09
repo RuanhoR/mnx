@@ -12,17 +12,17 @@ import { onMounted } from 'vue';
 import { LoginStatus } from '../utils/loginStatus';
 import { getI18n } from '../i18n';
 import { useRouter } from 'vue-router';
-import { KvKeys, KvManger } from '../utils/kvManger';
+import { KvKeys, KvManager } from '../utils/kvManager';
 const router = useRouter();
 const isLoading = LoginStatus.isLoading;
 const isLoging = LoginStatus.isLog;
 const hasURLParam = new URLSearchParams(location.search).has('token') || new URLSearchParams(location.search).has('code');
 onMounted(async () => {
-	LoginStatus.onVeirfy();
+	LoginStatus.onVerify();
 	await LoginStatus.waitVerify();
 	if (LoginStatus.isLog.value) {
 		console.log(LoginStatus.isLog);
-		router.push(KvManger.get(KvKeys.tmpVerifyURL) || '/');
+		router.push(KvManager.get(KvKeys.tmpVerifyURL) || '/');
 	}
 });
 </script>

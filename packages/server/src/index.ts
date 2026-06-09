@@ -1,10 +1,10 @@
 import ResponseFrame from './framework';
-import { RegerRoutes } from './routes';
+import { RegisterRoutes } from './routes';
 
 export default {
 	async fetch(request: Request): Promise<Response> {
 		const res = new ResponseFrame(request);
-		RegerRoutes(res);
+		RegisterRoutes(res);
 		return await res.handlerRequest();
 	},
 };

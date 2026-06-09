@@ -163,7 +163,7 @@ async function setScope(data: Map<string, string>, request: Request, url: URL): 
 			);
 		}
 
-		const scope = result.data![0];
+		const scope = result.data![0]!;
 		return json({
 			code: 200,
 			message: isNewScope ? 'Scope created successfully' : 'Scope updated successfully',

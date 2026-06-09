@@ -95,7 +95,7 @@ import { ref, onMounted, watch, computed, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getI18n } from '../i18n';
 import { fetchAPI } from '../utils/fetchAPI';
-import { CacheKeys } from '../utils/kvManger';
+import { CacheKeys } from '../utils/kvManager';
 import { IDBCache } from '../utils/idbCache';
 import config from '../config';
 import md from "markdown-it"

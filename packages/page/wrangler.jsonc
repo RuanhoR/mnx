@@ -1,7 +1,7 @@
 {
   "$schema": "./../../node_modules/wrangler/config-schema.json",
   "name": "mnx-page",
-  "compatibility_date": "2026-4-21",
+  "compatibility_date": "2026-04-21",
   "routes": [
     {
       "zone_name": "pmnx.qzz.io",

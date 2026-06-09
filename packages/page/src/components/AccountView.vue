@@ -159,7 +159,7 @@ import { formatTime } from '../i18n/date';
 import { ToastManger } from '../utils/toastManger';
 import { fetchAPI } from '../utils/fetchAPI';
 import config from '../config';
-import { KvKeys, KvManger } from '../utils/kvManger';
+import { KvKeys, KvManager } from '../utils/kvManager';
 import type { PackageProfile, TokenListResult } from '../types';
 import { array, number, object, string } from 'zod';
 import { copyText } from '../utils/copy';
@@ -195,7 +195,7 @@ async function logout() {
 	if (!logoutResult.ok) {
 		return toast.toast('error', `${getI18n('AccountLogout')}: Error: ${logoutResult.data}`);
 	}
-	KvManger.rm(KvKeys.token);
+	KvManager.rm(KvKeys.token);
 	// re-init
 	LoginStatus.Init();
 

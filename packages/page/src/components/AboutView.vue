@@ -7,7 +7,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { getI18n } from "././././../i18n"
+import { getI18n } from "../i18n"
 </script>
 <style lang="css" scoped>
 .about__title {
